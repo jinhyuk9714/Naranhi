@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.output/
+*.tsbuildinfo
+
+# Turbo
+.turbo/
+
+# IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.local
+apps/proxy/.env
+
+# Cache
+.cache/
+
+# Test coverage
+coverage/
+
+# Codex (previous tooling)
+.agent/
+.agents/
+.codex/
+codex/
+AGENTS.md
+
+# Claude Code
+.claude/plans/

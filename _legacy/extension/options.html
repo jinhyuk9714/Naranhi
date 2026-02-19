@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Naranhi Settings</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 16px; max-width: 720px; }
+    .field { margin: 12px 0; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 8px 10px; }
+    .row { display: flex; gap: 12px; }
+    .row > div { flex: 1; }
+    .hint { color: #666; font-size: 12px; margin-top: 6px; }
+    .ok { color: #0a7; font-size: 12px; }
+    .err { color: #c00; font-size: 12px; }
+    button { padding: 8px 10px; }
+    .inline { display: flex; align-items: center; gap: 8px; }
+    .inline input[type="checkbox"] { width: auto; }
+  </style>
+</head>
+<body>
+  <h1>Naranhi Settings</h1>
+
+  <div class="field">
+    <label for="proxyUrl">Proxy URL</label>
+    <input id="proxyUrl" placeholder="http://localhost:8787" />
+    <div class="hint">DeepL API cannot be called from the browser directly. Use the local proxy.</div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label for="targetLang">Target language</label>
+      <select id="targetLang">
+        <option value="KO">Korean (KO)</option>
+        <option value="EN">English (EN)</option>
+        <option value="JA">Japanese (JA)</option>
+        <option value="ZH">Chinese (ZH)</option>
+        <option value="DE">German (DE)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="sourceLang">Source language</label>
+      <select id="sourceLang">
+        <option value="">Auto</option>
+        <option value="EN">English (EN)</option>
+        <option value="JA">Japanese (JA)</option>
+        <option value="ZH">Chinese (ZH)</option>
+        <option value="DE">German (DE)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="extractionMode">Extraction mode</label>
+    <select id="extractionMode">
+      <option value="readability">Readability (recommended)</option>
+      <option value="legacy">Legacy heuristic</option>
+    </select>
+    <div class="hint">Readability mode prioritizes main content container before block extraction.</div>
+  </div>
+
+  <div class="field">
+    <label class="inline">
+      <input id="visibleOnly" type="checkbox" />
+      Translate visible blocks only (incremental while scrolling)
+    </label>
+    <div class="hint">If off, Naranhi runs full-scan translation once (v0.1 fallback behavior).</div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label for="visibleRootMargin">Visible root margin</label>
+      <input id="visibleRootMargin" placeholder="350px 0px 600px 0px" />
+    </div>
+    <div class="field">
+      <label for="batchFlushMs">Batch flush (ms)</label>
+      <input id="batchFlushMs" type="number" min="20" max="1000" step="10" />
+    </div>
+  </div>
+
+  <div class="field">
+    <button id="save">Save</button>
+    <span id="status"></span>
+  </div>
+
+  <div class="field">
+    <label class="inline">
+      <input id="cacheEnabled" type="checkbox" />
+      Enable persistent translation cache (chrome.storage.local)
+    </label>
+    <div class="hint">Default is OFF for privacy. Enable to reduce repeat translation cost.</div>
+  </div>
+
+  <div class="field">
+    <button id="clearCache">Clear local cache</button>
+    <span id="clearCacheStatus" class="hint"></span>
+  </div>
+
+  <hr/>
+
+  <div class="field">
+    <button id="testProxy">Test proxy health</button>
+    <div id="testResult" class="hint"></div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

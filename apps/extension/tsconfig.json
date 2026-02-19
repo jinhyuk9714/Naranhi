@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@naranhi/core": ["../../packages/core/src"],
+      "@naranhi/core/*": ["../../packages/core/src/*"],
+      "@naranhi/engines": ["../../packages/engines/src"],
+      "@naranhi/ui": ["../../packages/ui/src"],
+      "@naranhi/ui/*": ["../../packages/ui/src/*"],
+      "@naranhi/youtube": ["../../packages/youtube/src"],
+      "@naranhi/youtube/*": ["../../packages/youtube/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", ".wxt/**/*.ts"]
+}

@@ -1,0 +1,65 @@
+# Testing
+
+## Manual test matrix (v0.2.3)
+Sites:
+- Wikipedia article
+- Medium-like blog
+- News article
+
+Checks:
+- Toggle translation on/off
+- No layout breakage (basic)
+- Selection translate tooltip (`Translate with Naranhi`)
+- Visible-only mode: initial viewport translated first, scroll loads additional blocks
+- `visibleOnly=false` fallback: full-scan translation works like v0.1
+- `extractionMode=readability` vs `legacy` both produce translatable blocks
+- Proxy down -> inline banner + retry shown
+- Quota exceeded -> clear non-retryable error shown
+- Toggle off removes all injected translation nodes (`data-dualread-for`)
+- Cache disabled/enabled behavior matches options setting
+- Clear cache button clears local cache and background memory cache
+- Proxy returns `415 BAD_REQUEST` for non-JSON `Content-Type`
+- YouTube watch + manual/auto captions: subtitle toggle ON injects bilingual subtitle line
+- YouTube auto captions: word-by-word updates do not trigger translation spam
+- YouTube seek/pause/resume does not cause repeated translation spam
+- YouTube manual captions: short adjacent lines merge into sentence-level translation where appropriate
+- YouTube subtitle toggle state remains synced after popup reopen
+- YouTube non-watch page: subtitle toggle disabled + 안내 문구 표시
+- No-caption video: `No captions detected on this video.` banner shown
+- Hook unavailable case: DOM fallback still shows subtitle translations
+- Subtitle render anti-flicker: temporary miss keeps previous translated line briefly, then hides
+- Proxy `/segment` disabled (default): subtitle flow still works with heuristic-only split
+- Proxy `/segment` enabled: low-confidence English ASR windows can refine sentence boundaries without blocking playback
+- User report video `https://www.youtube.com/watch?v=Ce1x-yS1Jpo&t=2128s`: stable translation behavior
+
+## Unit tests
+Run:
+```bash
+node --test tests/*.test.mjs
+```
+
+Coverage:
+- chunking function honors item/char/body-byte limits
+- long text split/join preserves normalized order
+- cache key stability + dedupe key equivalence
+- proxy payload normalization and options filtering
+- DeepL status -> internal error code mapping
+- CORS origin resolution (`local`, explicit allowlist, wildcard)
+- `Content-Type` JSON detection helper
+- visible queue dedupe and state transitions (queued/inflight/translated)
+- content detection candidate selection + heuristic fallback
+- youtube subtitle caption normalization/dedupe/flush queue behavior
+- youtube ASR stabilizer split/merge and deterministic cue-id generation
+- youtube ASR low-confidence detection and manual caption sentence merger
+- youtube render policy (`time+text` cue selection and hold-last-text behavior)
+- DOM fallback commit policy (`700ms`/`1800ms`) and dedupe TTL
+- active cue selection by `video.currentTime`
+
+## Changelog
+- v0.1: added runnable unit tests under `tests/`.
+- v0.1: manual matrix expanded for cache controls and inline banner UX.
+- v0.1: added hardening checks for CORS policy and content-type validation.
+- v0.2: added visible-only and extraction-mode test scenarios.
+- v0.2.1: added YouTube subtitle bilingual-overlay scenarios and helper unit tests.
+- v0.2.2: added YouTube hook-first stabilization and DOM fallback test coverage.
+- v0.2.3: added sentence-merger, low-confidence ASR, render hold, and subtitle preset validation scenarios.

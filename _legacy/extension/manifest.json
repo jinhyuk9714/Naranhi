@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Naranhi",
+  "version": "0.2.2",
+  "description": "Naranhi bilingual reading: original + translation.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Naranhi"
+  },
+  "options_page": "options.html",
+  "permissions": ["storage", "contextMenus", "activeTab"],
+  "host_permissions": ["http://localhost:8787/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "vendor/readability/Readability.js",
+        "contentDetection.js",
+        "visibleQueue.js",
+        "youtubeSubtitle.js",
+        "youtubeAsrStabilizer.js",
+        "youtubeRenderPolicy.js",
+        "contentScript.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["ytHookBridge.js"],
+      "matches": ["https://www.youtube.com/*", "https://youtube.com/*"]
+    }
+  ]
+}

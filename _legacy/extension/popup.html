@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Naranhi</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 12px; width: 280px; }
+    .row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+    button { width: 100%; padding: 8px 10px; }
+    select, input { flex: 1; padding: 6px 8px; }
+    .muted { color: #666; font-size: 12px; }
+    .toggle-row { justify-content: space-between; }
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      cursor: pointer;
+      background: #c9ced6;
+      border-radius: 999px;
+      transition: background 0.2s ease;
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+    .switch input:checked + .slider {
+      background: #0b7a4b;
+    }
+    .switch input:checked + .slider::before {
+      transform: translateX(20px);
+    }
+    .toggle-text { display: flex; flex-direction: column; gap: 2px; }
+    .toggle-label { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="row">
+    <label for="target">Target</label>
+    <select id="target">
+      <option value="KO">Korean (KO)</option>
+      <option value="EN">English (EN)</option>
+      <option value="JA">Japanese (JA)</option>
+      <option value="ZH">Chinese (ZH)</option>
+      <option value="DE">German (DE)</option>
+    </select>
+  </div>
+
+  <div class="row toggle-row">
+    <label class="switch" for="toggle">
+      <input id="toggle" type="checkbox" />
+      <span class="slider"></span>
+    </label>
+    <div class="toggle-text">
+      <span class="toggle-label">Page Translation</span>
+      <span id="toggleState" class="muted">OFF</span>
+    </div>
+  </div>
+
+  <div class="row toggle-row">
+    <label class="switch" for="ytToggle">
+      <input id="ytToggle" type="checkbox" />
+      <span class="slider"></span>
+    </label>
+    <div class="toggle-text">
+      <span class="toggle-label">YouTube Subtitle</span>
+      <span id="ytToggleState" class="muted">OFF</span>
+    </div>
+  </div>
+  <div id="ytSupportHint" class="muted">Available on youtube.com/watch only.</div>
+
+  <div class="row">
+    <button id="openOptions">Settings</button>
+  </div>
+
+  <div class="muted">
+    Tip: select text -> right click -> "Translate with Naranhi".
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

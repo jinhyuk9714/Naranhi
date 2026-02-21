@@ -19,6 +19,7 @@ import { EngineManager } from '@naranhi/engines';
 import type { EngineConfig } from '@naranhi/engines';
 import { InflightTranslations } from './inflight';
 import { handleSelectionTranslateRequest } from './selection-translate';
+import { inflateSettings } from '../../lib/settings-storage';
 
 export default defineBackground(() => {
   // --- Constants ---
@@ -70,38 +71,7 @@ export default defineBackground(() => {
   // --- Settings ---
   async function loadSettings(): Promise<NaranhiSettings> {
     const stored = await chrome.storage.sync.get(null);
-    return {
-      engine: stored.engine || 'deepl',
-      targetLang: String(stored.targetLang || 'KO').toUpperCase(),
-      sourceLang: String(stored.sourceLang || '').toUpperCase(),
-      deepl: {
-        proxyUrl: sanitizeProxyUrl(stored.deeplProxyUrl || stored.proxyUrl),
-        formality: stored.deeplFormality || '',
-      },
-      openai: {
-        apiKey: stored.openaiApiKey || '',
-        model: stored.openaiModel || 'gpt-4o-mini',
-        baseUrl: stored.openaiBaseUrl || 'https://api.openai.com/v1',
-      },
-      google: {
-        apiKey: stored.googleApiKey || '',
-      },
-      displayMode: stored.displayMode || 'bilingual',
-      translationPosition: stored.translationPosition || 'below',
-      floatingButton: stored.floatingButton !== false,
-      theme: stored.theme || 'auto',
-      visibleOnly: stored.visibleOnly !== false,
-      visibleRootMargin: stored.visibleRootMargin || '350px 0px 600px 0px',
-      batchFlushMs: Number(stored.batchFlushMs) || 120,
-      cacheEnabled: Boolean(stored.cacheEnabled),
-      shortcuts: stored.shortcuts || {},
-    };
-  }
-
-  function sanitizeProxyUrl(raw: unknown): string {
-    const value = String(raw || '').trim().replace(/\/$/, '');
-    if (!value || !/^https?:\/\//i.test(value)) return 'http://localhost:8787';
-    return value;
+    return inflateSettings(stored);
   }
 
   // --- Context Menu ---

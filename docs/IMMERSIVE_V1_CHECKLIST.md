@@ -23,7 +23,7 @@
 - [ ] 캡션 미존재/권한 문제 시 명확한 메시지를 노출한다.
 
 ## D. Settings & State
-- [ ] 설정 저장/복원(`chrome.storage`)이 일관된다.
+- [x] 설정 저장/복원(`chrome.storage`)이 일관된다. (근거: extension 공통 `settings-storage` 모듈(`inflateSettings`/`flattenSettingsPatch`)을 도입해 popup/options/sidepanel hook과 background가 동일 키 매핑/복원 로직을 공유하도록 통합, proxy URL sanitize 포함, `settings-storage.test.ts`로 flat↔nested 매핑 및 기본값/정규화 회귀 테스트 추가)
 - [ ] 팝업/사이드패널/콘텐츠 상태가 서로 동기화된다.
 - [ ] 프록시 URL/옵션 변경 시 안전한 검증이 있다.
 - [ ] 민감값(API key 등)이 클라이언트에 노출되지 않는다.

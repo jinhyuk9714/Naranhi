@@ -3,6 +3,7 @@ import { SUPPORTED_LANGUAGES, MESSAGE_TYPES } from '@naranhi/core';
 import type { EngineType } from '@naranhi/core';
 import { Button, Toggle, Select, StatusBadge } from '@naranhi/ui';
 import { useSettings } from '../../hooks/useSettings';
+import { resolveProxyConnectionErrorMessage } from '../../lib/proxy-connection-error';
 
 const ENGINE_OPTIONS = [
   { value: 'deepl', label: 'DeepL' },
@@ -21,20 +22,45 @@ export default function App() {
   const { settings, loading, updateSettings } = useSettings();
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [testStatus, setTestStatus] = useState<Record<string, 'connected' | 'disconnected' | 'loading'>>({});
+  const [testError, setTestError] = useState<Record<string, string>>({});
 
   const testEngine = useCallback(async (engineId: EngineType) => {
     setTestStatus((prev) => ({ ...prev, [engineId]: 'loading' }));
+    setTestError((prev) => ({ ...prev, [engineId]: '' }));
     try {
       let ok = false;
       if (engineId === 'deepl') {
-        const resp = await fetch(`${settings.deepl.proxyUrl}/health`);
+        const proxyUrl = settings.deepl.proxyUrl.trim();
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 4000);
+        let resp: Response;
+        try {
+          resp = await fetch(`${proxyUrl}/health`, { signal: controller.signal });
+        } finally {
+          clearTimeout(timer);
+        }
         ok = resp.ok;
+        if (!ok) {
+          setTestError((prev) => ({
+            ...prev,
+            deepl: resolveProxyConnectionErrorMessage({ proxyUrl, status: resp.status }),
+          }));
+        }
       } else {
         // For other engines, we'd test via background
         ok = true;
       }
       setTestStatus((prev) => ({ ...prev, [engineId]: ok ? 'connected' : 'disconnected' }));
-    } catch {
+    } catch (error) {
+      if (engineId === 'deepl') {
+        setTestError((prev) => ({
+          ...prev,
+          deepl: resolveProxyConnectionErrorMessage({
+            proxyUrl: settings.deepl.proxyUrl.trim(),
+            error,
+          }),
+        }));
+      }
       setTestStatus((prev) => ({ ...prev, [engineId]: 'disconnected' }));
     }
   }, [settings]);
@@ -143,6 +169,7 @@ export default function App() {
                 <Button variant="secondary" size="sm" onClick={() => testEngine('deepl')}>
                   Test Connection
                 </Button>
+                {testError.deepl && <p className="text-xs text-red-600">{testError.deepl}</p>}
               </div>
 
               {/* OpenAI */}

@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DEFAULT_SETTINGS } from '@naranhi/core';
 import type { NaranhiSettings } from '@naranhi/core';
-import { inflateSettings, flattenSettingsPatch, extractSyncStorageChanges } from '../lib/settings-storage';
+import {
+  CLIENT_SECRET_STORAGE_KEYS,
+  inflateSettings,
+  flattenSettingsPatch,
+  extractSyncStorageChanges,
+} from '../lib/settings-storage';
 
 type PartialSettings = Partial<NaranhiSettings>;
 
@@ -14,6 +19,8 @@ export function useSettings() {
       setSettings(inflateSettings(stored));
       setLoading(false);
     });
+
+    void chrome.storage.sync.remove([...CLIENT_SECRET_STORAGE_KEYS]);
 
     const onChanged = (changes: Record<string, { newValue?: unknown }>, areaName: string) => {
       if (areaName !== 'sync') return;

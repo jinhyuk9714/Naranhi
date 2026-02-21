@@ -24,7 +24,7 @@ describe('settings-storage', () => {
     expect(settings.sourceLang).toBe('EN');
     expect(settings.deepl.proxyUrl).toBe('http://localhost:8787');
     expect(settings.deepl.formality).toBe('less');
-    expect(settings.openai.apiKey).toBe('sk-test');
+    expect(settings.openai.apiKey).toBe('');
     expect(settings.visibleOnly).toBe(false);
     expect(settings.batchFlushMs).toBe(240);
   });
@@ -33,13 +33,15 @@ describe('settings-storage', () => {
     const flat = flattenSettingsPatch({
       deepl: { proxyUrl: 'https://proxy.example.com/', formality: 'default' },
       openai: { apiKey: 'sk-new', model: 'gpt-4o' },
+      google: { apiKey: 'g-secret' },
       visibleRootMargin: '0px 0px 300px 0px',
       shortcuts: { toggle: 'Alt+T' },
     });
 
     expect(flat.deeplProxyUrl).toBe('https://proxy.example.com');
     expect(flat.deeplFormality).toBe('default');
-    expect(flat.openaiApiKey).toBe('sk-new');
+    expect(flat.openaiApiKey).toBeUndefined();
+    expect(flat.googleApiKey).toBeUndefined();
     expect(flat.openaiModel).toBe('gpt-4o');
     expect(flat.visibleRootMargin).toBe('0px 0px 300px 0px');
     expect(flat.shortcuts).toEqual({ toggle: 'Alt+T' });
@@ -49,6 +51,7 @@ describe('settings-storage', () => {
     const patch = extractSyncStorageChanges({
       targetLang: { oldValue: 'EN', newValue: 'JA' },
       deeplProxyUrl: { newValue: 'https://proxy.example.com' },
+      openaiApiKey: { newValue: 'sk-should-not-pass' },
       ignored: {},
     });
 

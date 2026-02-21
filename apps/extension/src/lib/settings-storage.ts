@@ -6,6 +6,8 @@ type PartialSettings = Partial<NaranhiSettings>;
 type StorageChanges = Record<string, { newValue?: unknown }>;
 
 const ALLOWED_ENGINES = new Set(['deepl', 'openai', 'google']);
+export const CLIENT_SECRET_STORAGE_KEYS = ['openaiApiKey', 'googleApiKey'] as const;
+const SENSITIVE_CLIENT_KEYS = new Set<string>(CLIENT_SECRET_STORAGE_KEYS);
 const ALLOWED_DISPLAY_MODES = new Set(['bilingual', 'translation-only', 'original-only']);
 const ALLOWED_TRANSLATION_POSITIONS = new Set(['below', 'side', 'hover']);
 const ALLOWED_THEMES = new Set(['auto', 'light', 'dark']);
@@ -64,12 +66,12 @@ export function inflateSettings(stored: FlatStorage): NaranhiSettings {
       formality: sanitizeDeepLFormality(stored.deeplFormality || DEFAULT_SETTINGS.deepl.formality || ''),
     },
     openai: {
-      apiKey: String(stored.openaiApiKey || DEFAULT_SETTINGS.openai.apiKey),
+      apiKey: '',
       model: String(stored.openaiModel || DEFAULT_SETTINGS.openai.model),
       baseUrl: sanitizeHttpUrl(stored.openaiBaseUrl, DEFAULT_SETTINGS.openai.baseUrl || 'https://api.openai.com/v1'),
     },
     google: {
-      apiKey: String(stored.googleApiKey || DEFAULT_SETTINGS.google.apiKey || ''),
+      apiKey: '',
     },
     displayMode: asAllowed(stored.displayMode, ALLOWED_DISPLAY_MODES, DEFAULT_SETTINGS.displayMode),
     translationPosition: asAllowed(
@@ -90,6 +92,7 @@ export function inflateSettings(stored: FlatStorage): NaranhiSettings {
 export function extractSyncStorageChanges(changes: StorageChanges): FlatStorage {
   const flat: FlatStorage = {};
   for (const [key, change] of Object.entries(changes || {})) {
+    if (SENSITIVE_CLIENT_KEYS.has(key)) continue;
     if (change && Object.prototype.hasOwnProperty.call(change, 'newValue')) {
       flat[key] = change.newValue;
     }
@@ -110,7 +113,6 @@ export function flattenSettingsPatch(updates: PartialSettings): FlatStorage {
   }
 
   if (updates.openai) {
-    if (updates.openai.apiKey !== undefined) flat.openaiApiKey = updates.openai.apiKey;
     if (updates.openai.model !== undefined) flat.openaiModel = updates.openai.model;
     if (updates.openai.baseUrl !== undefined) {
       flat.openaiBaseUrl = sanitizeHttpUrl(updates.openai.baseUrl, DEFAULT_SETTINGS.openai.baseUrl || 'https://api.openai.com/v1');
@@ -118,7 +120,7 @@ export function flattenSettingsPatch(updates: PartialSettings): FlatStorage {
   }
 
   if (updates.google) {
-    if (updates.google.apiKey !== undefined) flat.googleApiKey = updates.google.apiKey;
+    // client-side API key persistence is intentionally blocked
   }
 
   if (updates.displayMode !== undefined) {

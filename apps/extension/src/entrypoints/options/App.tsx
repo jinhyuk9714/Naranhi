@@ -151,16 +151,9 @@ export default function App() {
                   <h3 className="font-medium text-gray-900">OpenAI / ChatGPT</h3>
                   {testStatus.openai && <StatusBadge status={testStatus.openai} />}
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-500 uppercase">API Key</label>
-                  <input
-                    type="password"
-                    value={settings.openai.apiKey}
-                    onChange={(e) => updateSettings({ openai: { ...settings.openai, apiKey: e.target.value } })}
-                    className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-naranhi-500/40"
-                    placeholder="sk-..."
-                  />
-                </div>
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                  API keys are never stored in the extension. Configure provider credentials on your proxy/backend only.
+                </p>
                 <Select
                   label="Model"
                   value={settings.openai.model}
@@ -179,17 +172,9 @@ export default function App() {
                   <h3 className="font-medium text-gray-900">Google Translate</h3>
                   {testStatus.google && <StatusBadge status={testStatus.google} />}
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-500 uppercase">API Key (optional)</label>
-                  <input
-                    type="password"
-                    value={settings.google.apiKey || ''}
-                    onChange={(e) => updateSettings({ google: { apiKey: e.target.value } })}
-                    className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-naranhi-500/40"
-                    placeholder="Leave empty for free tier"
-                  />
-                </div>
-                <p className="text-xs text-gray-400">Without an API key, the free tier will be used (rate-limited).</p>
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                  Google API keys are also backend-only. Keep secrets on the proxy server, not in client storage.
+                </p>
               </div>
             </div>
           )}

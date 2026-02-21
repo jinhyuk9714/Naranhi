@@ -17,6 +17,7 @@ Checks:
 - Quota exceeded -> clear non-retryable error shown
 - Toggle off removes all injected translation nodes (`data-dualread-for`)
 - Cache disabled/enabled behavior matches options setting
+- 엔진 설정 화면에 API key 입력 필드가 없고, 비밀키는 클라이언트 저장소(sync/local)에 저장되지 않음
 - Clear cache button clears local cache and background memory cache
 - Proxy returns `415 BAD_REQUEST` for non-JSON `Content-Type`
 - YouTube watch + manual/auto captions: subtitle toggle ON injects bilingual subtitle line

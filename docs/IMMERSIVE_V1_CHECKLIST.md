@@ -26,7 +26,7 @@
 - [x] 설정 저장/복원(`chrome.storage`)이 일관된다. (근거: extension 공통 `settings-storage` 모듈(`inflateSettings`/`flattenSettingsPatch`)을 도입해 popup/options/sidepanel hook과 background가 동일 키 매핑/복원 로직을 공유하도록 통합, proxy URL sanitize 포함, `settings-storage.test.ts`로 flat↔nested 매핑 및 기본값/정규화 회귀 테스트 추가)
 - [x] 팝업/사이드패널/콘텐츠 상태가 서로 동기화된다. (근거: content에서 페이지 토글 시 `PAGE_STATE_CHANGED` runtime 이벤트를 브로드캐스트하고 popup/floating content가 수신해 즉시 UI 상태 반영, `useSettings`에 `chrome.storage.onChanged` 구독을 추가해 popup/sidepanel/options 설정 변경이 실시간 동기화되도록 보강, `settings-storage.test.ts`에 storage change patch 추출 회귀 테스트 추가)
 - [x] 프록시 URL/옵션 변경 시 안전한 검증이 있다. (근거: `settings-storage`에서 프록시/OpenAI URL http(s) 검증·보정, enum 옵션(engine/displayMode/position/theme/formality) allowlist 검증, `batchFlushMs` 범위 clamp(20~1000), `visibleRootMargin` 토큰 포맷(px/%) 검증 추가; `settings-storage.test.ts`에 잘못된 값 거부/기본값 fallback 회귀 테스트 추가)
-- [ ] 민감값(API key 등)이 클라이언트에 노출되지 않는다.
+- [x] 민감값(API key 등)이 클라이언트에 노출되지 않는다. (근거: `settings-storage`에서 `openaiApiKey/googleApiKey`를 inflate/flatten/onChanged 경로 모두 차단해 클라이언트 상태/저장 반영을 제거하고, `useSettings` 마운트 시 legacy secret 키를 `chrome.storage.sync.remove`로 정리, options 엔진 탭의 API key 입력 UI를 제거해 backend-only 정책을 명시, `settings-storage.test.ts`에 secret 키 무시 회귀 테스트 추가)
 
 ## E. Quality Gates
 - [ ] `pnpm lint` 통과

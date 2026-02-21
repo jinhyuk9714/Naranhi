@@ -19,7 +19,7 @@
 
 ## C. Proxy/Engine 안정성
 
-- [ ] `apps/proxy`가 `PORT=8787`에서 정상 실행되고 `/health`가 200을 반환한다.
+- [x] `apps/proxy`가 `PORT=8787`에서 정상 실행되고 `/health`가 200을 반환한다.
 - [x] `/translate` 실패 시 구조화 오류 코드/메시지 매핑이 유지된다.
 - [x] 옵션의 `Test Connection` 실패 메시지가 실제 원인(미실행/주소오류/HTTP오류)을 구분해 보여준다.
 

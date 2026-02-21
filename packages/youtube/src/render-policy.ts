@@ -90,6 +90,17 @@ export interface RenderState {
   lastShownAt: number;
 }
 
+export interface PlaybackSnapshot {
+  videoMs: number;
+  paused: boolean;
+}
+
+function isSeekDiscontinuity(previous: PlaybackSnapshot | null | undefined, current: PlaybackSnapshot): boolean {
+  if (!previous) return false;
+  if (!Number.isFinite(previous.videoMs) || !Number.isFinite(current.videoMs)) return false;
+  return Math.abs(current.videoMs - previous.videoMs) > 1500;
+}
+
 export function resolveRenderText(
   translatedText: string | null | undefined,
   previousState?: RenderState | null,
@@ -122,4 +133,35 @@ export function resolveRenderText(
     text: '',
     state: { lastText: '', lastShownAt: 0 },
   };
+}
+
+export function resolveRenderTextWithPlayback(
+  translatedText: string | null | undefined,
+  previousState: RenderState | null | undefined,
+  playback: PlaybackSnapshot,
+  previousPlayback?: PlaybackSnapshot | null,
+  nowMs?: number,
+  holdMs: number = DEFAULT_HOLD_MS,
+): { text: string; state: RenderState } {
+  const normalized = normalizeText(translatedText);
+  if (normalized) {
+    return resolveRenderText(normalized, previousState, nowMs, holdMs);
+  }
+
+  if (isSeekDiscontinuity(previousPlayback, playback)) {
+    return resolveRenderText('', null, nowMs, holdMs);
+  }
+
+  // While paused, keep previous render text regardless of hold timeout.
+  if (playback.paused && previousState?.lastText) {
+    return {
+      text: normalizeText(previousState.lastText),
+      state: {
+        lastText: normalizeText(previousState.lastText),
+        lastShownAt: Number(previousState.lastShownAt || nowMs || Date.now()),
+      },
+    };
+  }
+
+  return resolveRenderText('', previousState, nowMs, holdMs);
 }

@@ -12,9 +12,10 @@ export {
   cueTextSimilarity,
   selectCueByTimeAndText,
   resolveRenderText,
+  resolveRenderTextWithPlayback,
 } from './render-policy';
 
-export type { Cue, RenderState } from './render-policy';
+export type { Cue, RenderState, PlaybackSnapshot } from './render-policy';
 
 export {
   DEFAULT_WORDS_REGEX,

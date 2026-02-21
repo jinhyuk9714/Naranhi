@@ -12,7 +12,7 @@
 
 ## B. Translation Pipeline
 - [x] visible-only 번역이 스크롤 시 점진적으로 동작한다. (근거: `setupVisibleQueue`에 `IntersectionObserver` 미지원 환경 fallback(큐 일괄 등록 후 배치 flush) 추가, `translator.test.ts`에 교차 감지 시점별 점진 번역(1차 b1, 2차 b2) 검증 및 IO 미지원 fallback 배치 동작 검증 테스트 추가)
-- [ ] 문장 분할/병합 품질이 긴 문단에서도 안정적이다.
+- [x] 문장 분할/병합 품질이 긴 문단에서도 안정적이다. (근거: `splitTextByLimit` 문장 경계 인식 강화(공백 없는 문장 경계·혼합 구두점 대응) 및 과대 문장 fallback을 고정 길이 자르기에서 공백/구두점 우선 절단으로 개선, `packages/core/__tests__/pipeline.test.ts`에 혼합 구두점 긴 문단/무구두점 긴 문장/segment order 회귀 테스트 추가)
 - [ ] 동일 텍스트 중복 번역이 캐시로 최소화된다.
 - [ ] DeepL 요청 제한(크기/빈도/오류코드)에 맞춰 방어 로직이 있다.
 

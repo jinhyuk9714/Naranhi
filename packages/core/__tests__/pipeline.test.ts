@@ -5,6 +5,7 @@ import {
   buildCacheKeyMaterial,
   buildRequestPayload,
   estimatePayloadBytes,
+  expandItems,
   normalizeText,
   sha256Hex,
   splitTextByLimit,
@@ -49,6 +50,41 @@ describe('splitTextByLimit', () => {
     }
 
     expect(normalizeText(chunks.join(' '))).toBe(normalizeText(longText));
+  });
+
+  it('splits mixed punctuation paragraphs at natural sentence boundaries', () => {
+    const mixed =
+      '첫 문장입니다.다음 문장은 공백 없이 이어집니다! Third sentence has English punctuation? 마지막 문장도 충분히 깁니다; 그리고 이어집니다: 끝.';
+    const chunks = splitTextByLimit(mixed, 45);
+
+    expect(chunks.length).toBeGreaterThan(2);
+    expect(chunks.every((chunk) => chunk.length <= 45)).toBe(true);
+
+    const compactSentenceSpacing = (value: string) =>
+      normalizeText(value).replace(/([.!?。！？])\s*/gu, '$1');
+
+    expect(compactSentenceSpacing(chunks.join(' '))).toBe(compactSentenceSpacing(mixed));
+  });
+
+  it('falls back to whitespace-aware cuts for overlong sentence', () => {
+    const noPunctuation = Array.from({ length: 120 }, (_, i) => `token${i}`).join(' ');
+    const chunks = splitTextByLimit(noPunctuation, 80);
+
+    expect(chunks.length).toBeGreaterThan(2);
+    expect(chunks.every((chunk) => chunk.length <= 80)).toBe(true);
+    expect(normalizeText(chunks.join(' '))).toBe(normalizeText(noPunctuation));
+  });
+});
+
+describe('expandItems', () => {
+  it('keeps segment order for reassembly of long paragraph', () => {
+    const longParagraph = Array.from({ length: 90 }, (_, i) => `문장${i}.`).join('');
+    const { expandedItems, originalItems } = expandItems([{ id: 'p1', text: longParagraph }], 60);
+
+    expect(expandedItems.length).toBeGreaterThan(1);
+    expect(originalItems).toHaveLength(1);
+    expect(originalItems[0].segmentIds).toHaveLength(expandedItems.length);
+    expect(originalItems[0].segmentIds).toEqual(expandedItems.map((item) => item.id));
   });
 });
 

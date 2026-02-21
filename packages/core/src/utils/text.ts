@@ -1,4 +1,4 @@
-import { SENTENCE_BOUNDARY, LIMITS } from '../constants';
+import { LIMITS } from '../constants';
 
 /**
  * Normalize whitespace: collapse multiple spaces/newlines to single space, trim.
@@ -49,9 +49,26 @@ export async function sha256Hex(input: string): Promise<string> {
 }
 
 function splitOversizedSentence(text: string, maxChars: number, out: string[]): void {
-  for (let idx = 0; idx < text.length; idx += maxChars) {
-    out.push(text.slice(idx, idx + maxChars));
+  let remaining = normalizeText(text);
+
+  while (remaining.length > maxChars) {
+    const hardCut = maxChars;
+    const minSoftCut = Math.floor(maxChars * 0.6);
+
+    let cut = remaining.lastIndexOf(' ', hardCut);
+    if (cut < minSoftCut) {
+      const punctuationCandidates = [',', ';', ':', '，', '、', '；', '：'];
+      cut = Math.max(...punctuationCandidates.map((token) => remaining.lastIndexOf(token, hardCut)));
+    }
+
+    if (cut < minSoftCut) cut = hardCut;
+
+    const part = normalizeText(remaining.slice(0, cut));
+    if (part) out.push(part);
+    remaining = normalizeText(remaining.slice(cut));
   }
+
+  if (remaining) out.push(remaining);
 }
 
 export function splitTextByLimit(
@@ -62,7 +79,8 @@ export function splitTextByLimit(
   if (!normalized) return [];
   if (normalized.length <= maxChars) return [normalized];
 
-  const sentences = normalized.split(SENTENCE_BOUNDARY).filter(Boolean);
+  const sentenceBoundary = /(?<=[.!?。！？…]|[;；:：])\s+|(?<=[.!?。！？…])(?=[^\s])/u;
+  const sentences = normalized.split(sentenceBoundary).filter(Boolean);
   if (!sentences.length) {
     const chunks: string[] = [];
     splitOversizedSentence(normalized, maxChars, chunks);

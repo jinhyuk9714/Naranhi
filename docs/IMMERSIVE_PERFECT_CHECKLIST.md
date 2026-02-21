@@ -14,7 +14,7 @@
 - [ ] watch 페이지가 아니면 `NOT_WATCH_PAGE` 오류 코드와 사용자 안내 문구가 일치한다.
 - [ ] 자막 버튼이 없을 때 `NO_CAPTIONS` 오류 코드가 일치하고 안내 문구가 표시된다.
 - [ ] 자막 권한 제한/비활성 상태에서 `CAPTION_PERMISSION_DENIED` 오류 코드가 일치한다.
-- [ ] 유튜브 자막 번역 파이프라인(수집 -> 배치 번역 -> 렌더)이 실제로 동작한다.
+- [x] 유튜브 자막 번역 파이프라인(수집 -> 배치 번역 -> 렌더)이 실제로 동작한다.
 - [ ] seek/pause/resume 중 자막 번역이 깨지지 않고 중복 렌더/깜빡임이 허용 범위 내다.
 
 ## C. Proxy/Engine 안정성
@@ -28,7 +28,7 @@
 - [x] `pnpm --filter @naranhi/extension test` 통과.
 - [x] `pnpm --filter @naranhi/extension build` 통과.
 - [ ] `pnpm --filter @naranhi/proxy test` 통과.
-- [ ] 새로 추가한 유튜브 관련 로직에 단위 테스트가 함께 추가되어 있다.
+- [x] 새로 추가한 유튜브 관련 로직에 단위 테스트가 함께 추가되어 있다.
 
 ## E. 문서/운영
 

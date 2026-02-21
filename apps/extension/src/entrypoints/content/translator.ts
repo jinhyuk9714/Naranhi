@@ -120,6 +120,12 @@ export class PageTranslator {
   }
 
   private setupVisibleQueue(items: Array<{ id: string; text: string; el: HTMLElement }>): void {
+    if (typeof IntersectionObserver !== 'function') {
+      this.queue.enqueueMany(items.map((item) => item.id));
+      this.flushTimer = setInterval(() => void this.flushQueue(), this.state.batchFlushMs);
+      return;
+    }
+
     this.observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {

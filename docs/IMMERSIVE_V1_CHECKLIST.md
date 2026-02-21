@@ -41,4 +41,4 @@
 - [x] 릴리즈 노트(v1 후보) 문서가 추가된다. (근거: `docs/RELEASE_NOTES_V1_CANDIDATE.md` 신규 추가 — 핵심 변경점(Core/Pipeline/YouTube/Settings), 검증 스냅샷, known gaps, 업그레이드 노트 포함)
 
 ## Finish
-- [ ] 두 봇이 최종 리뷰 후 `FLAGDOCK_DONE`을 선언한다.
+- [x] 두 봇이 최종 리뷰 후 `FLAGDOCK_DONE`을 선언한다. (근거: R2-T9 시점 기준 A~F 전 항목 [x] 상태 상호 검증 완료, 최신 quality gate(`pnpm lint/test/build`) 재실행 통과 확인, 문서 세트(README/TESTING/ROADMAP/RELEASE NOTES) 최종 동기화 상태 확인)

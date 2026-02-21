@@ -11,9 +11,9 @@
 ## B. YouTube 핵심 기능
 
 - [ ] 팝업 `YouTube Subtitles` 토글이 watch 페이지에서 실제로 ON/OFF 응답을 주고 UI 상태가 동기화된다.
-- [ ] watch 페이지가 아니면 `NOT_WATCH_PAGE` 오류 코드와 사용자 안내 문구가 일치한다.
-- [ ] 자막 버튼이 없을 때 `NO_CAPTIONS` 오류 코드가 일치하고 안내 문구가 표시된다.
-- [ ] 자막 권한 제한/비활성 상태에서 `CAPTION_PERMISSION_DENIED` 오류 코드가 일치한다.
+- [x] watch 페이지가 아니면 `NOT_WATCH_PAGE` 오류 코드와 사용자 안내 문구가 일치한다.
+- [x] 자막 버튼이 없을 때 `NO_CAPTIONS` 오류 코드가 일치하고 안내 문구가 표시된다.
+- [x] 자막 권한 제한/비활성 상태에서 `CAPTION_PERMISSION_DENIED` 오류 코드가 일치한다.
 - [x] 유튜브 자막 번역 파이프라인(수집 -> 배치 번역 -> 렌더)이 실제로 동작한다.
 - [x] seek/pause/resume 중 자막 번역이 깨지지 않고 중복 렌더/깜빡임이 허용 범위 내다.
 

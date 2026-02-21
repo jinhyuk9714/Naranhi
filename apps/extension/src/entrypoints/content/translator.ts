@@ -12,6 +12,7 @@ import {
   assignBlockIds,
   injectTranslation,
   removeAllTranslations,
+  showBanner,
 } from './dom-injector';
 
 interface TranslatorState {
@@ -168,7 +169,13 @@ export class PageTranslator {
         channel: 'page',
       });
 
-      if (!response?.ok || response.data?.runId !== runId) return;
+      if (!response?.ok) {
+        const message = String(response?.error?.message || 'Translation failed');
+        const retryable = Boolean(response?.error?.retryable);
+        throw { message, retryable };
+      }
+
+      if (response.data?.runId !== runId) return;
 
       const translations = response.data.translations || [];
       const translatedIds: string[] = [];
@@ -181,9 +188,27 @@ export class PageTranslator {
       }
 
       this.queue.markTranslated(translatedIds);
-    } catch {
+    } catch (err) {
       // Mark items as failed so they can be retried
-      this.queue.clearInflight(items.map((i) => i.id));
+      const failedIds = items.map((i) => i.id);
+      this.queue.clearInflight(failedIds);
+
+      const message =
+        err && typeof err === 'object' && 'message' in err
+          ? String(err.message || 'Translation failed')
+          : 'Translation failed';
+      const retryable = Boolean(err && typeof err === 'object' && 'retryable' in err && err.retryable);
+
+      showBanner(
+        message,
+        retryable,
+        retryable
+          ? () => {
+              this.queue.enqueueMany(failedIds);
+              void this.flushQueue();
+            }
+          : undefined,
+      );
     }
   }
 }

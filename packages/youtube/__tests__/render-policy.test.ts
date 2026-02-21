@@ -64,6 +64,32 @@ describe('resolveRenderTextWithPlayback', () => {
     expect(resumed.text).toBe('');
   });
 
+  it('does not flicker blank across pause-resume when fresh translation arrives', () => {
+    const first = resolveRenderText('line A', null, 1000, 900);
+
+    const paused = resolveRenderTextWithPlayback(
+      '',
+      first.state,
+      { videoMs: 6000, paused: true },
+      { videoMs: 6000, paused: true },
+      5000,
+      900,
+    );
+    expect(paused.text).toBe('line A');
+
+    const resumedWithNew = resolveRenderTextWithPlayback(
+      'line B',
+      paused.state,
+      { videoMs: 6100, paused: false },
+      { videoMs: 6000, paused: true },
+      5100,
+      900,
+    );
+
+    expect(resumedWithNew.text).toBe('line B');
+    expect(resumedWithNew.state.lastText).toBe('line B');
+  });
+
   it('resets stale text immediately on seek discontinuity', () => {
     const first = resolveRenderText('stale line', null, 1000, 900);
     const afterSeek = resolveRenderTextWithPlayback(
@@ -77,5 +103,20 @@ describe('resolveRenderTextWithPlayback', () => {
 
     expect(afterSeek.text).toBe('');
     expect(afterSeek.state.lastText).toBe('');
+  });
+
+  it('prevents duplicate render state churn for identical translated text', () => {
+    const first = resolveRenderTextWithPlayback('same line', null, { videoMs: 1000, paused: false }, null, 1000, 900);
+    const second = resolveRenderTextWithPlayback(
+      'same line',
+      first.state,
+      { videoMs: 1100, paused: false },
+      { videoMs: 1000, paused: false },
+      1100,
+      900,
+    );
+
+    expect(second.text).toBe('same line');
+    expect(second.state.lastText).toBe('same line');
   });
 });

@@ -29,14 +29,14 @@
 - [x] 민감값(API key 등)이 클라이언트에 노출되지 않는다. (근거: `settings-storage`에서 `openaiApiKey/googleApiKey`를 inflate/flatten/onChanged 경로 모두 차단해 클라이언트 상태/저장 반영을 제거하고, `useSettings` 마운트 시 legacy secret 키를 `chrome.storage.sync.remove`로 정리, options 엔진 탭의 API key 입력 UI를 제거해 backend-only 정책을 명시, `settings-storage.test.ts`에 secret 키 무시 회귀 테스트 추가)
 
 ## E. Quality Gates
-- [ ] `pnpm lint` 통과
-- [ ] `pnpm test` 통과
-- [ ] `pnpm build` 통과
-- [ ] 주요 수동 시나리오(문서) 점검 완료
+- [x] `pnpm lint` 통과 (근거: R2-T7 기준 전체 워크스페이스 `pnpm lint` 성공 로그 확보)
+- [x] `pnpm test` 통과 (근거: R2-T7 기준 전체 워크스페이스 `pnpm test` 성공 로그 확보)
+- [x] `pnpm build` 통과 (근거: R2-T7 기준 전체 워크스페이스 `pnpm build` 성공 로그 확보)
+- [x] 주요 수동 시나리오(문서) 점검 완료 (근거: `docs/TESTING.md`에 v1 candidate 수동 시나리오 점검 결과 스냅샷 추가)
 
 ## F. Docs & Release
 - [ ] README에 설치/실행/데모/한계가 최신 상태로 반영된다.
-- [ ] `docs/TESTING.md` 수동 테스트 결과가 최신화된다.
+- [x] `docs/TESTING.md` 수동 테스트 결과가 최신화된다. (근거: `Latest verification snapshot (v1 candidate)` 섹션 추가로 자동 게이트(lint/test/build)와 수동 시나리오 점검 결과 최신 반영)
 - [ ] `docs/ROADMAP.md` v1 항목이 실제 구현 상태와 일치한다.
 - [ ] 릴리즈 노트(v1 후보) 문서가 추가된다.
 

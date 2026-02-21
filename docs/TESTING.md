@@ -57,6 +57,19 @@ Coverage:
 - DOM fallback commit policy (`700ms`/`1800ms`) and dedupe TTL
 - active cue selection by `video.currentTime`
 
+## Latest verification snapshot (v1 candidate)
+- Date/round: 2026-02-21, OpenClaw 2-bot loop R2
+- Automated gates:
+  - `pnpm lint` ✅
+  - `pnpm test` ✅
+  - `pnpm build` ✅
+- Manual checklist pass summary:
+  - Core page translation toggle/rollback/visible-only flows ✅
+  - Context menu selection translate on Wikipedia/blog/news + fallback banner ✅
+  - YouTube watch-only toggle gating + no-caption/permission notice messaging ✅
+  - YouTube ASR duplicate suppression + pause/seek/resume anti-flicker behavior ✅
+  - Settings sync/validation/secret non-exposure policy checks ✅
+
 ## Changelog
 - v0.1: added runnable unit tests under `tests/`.
 - v0.1: manual matrix expanded for cache controls and inline banner UX.
@@ -65,3 +78,4 @@ Coverage:
 - v0.2.1: added YouTube subtitle bilingual-overlay scenarios and helper unit tests.
 - v0.2.2: added YouTube hook-first stabilization and DOM fallback test coverage.
 - v0.2.3: added sentence-merger, low-confidence ASR, render hold, and subtitle preset validation scenarios.
+- v1-candidate: quality gate run + full manual matrix snapshot added.

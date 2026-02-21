@@ -17,7 +17,7 @@
 - [x] DeepL 요청 제한(크기/빈도/오류코드)에 맞춰 방어 로직이 있다. (근거: proxy에서 요청 본문 크기 제한(`MAX_BODY_BYTES`) 검증 유지 + DeepL 429/5xx에 대해 `Retry-After` 우선/지수 백오프 기반 재시도(`DEEPL_RETRY_ATTEMPTS`) 추가, 400/401/403/429/456/5xx 오류코드 매핑으로 retryable 여부 분리, `apps/proxy/__tests__/translate.test.ts`에 retry status·Retry-After/backoff helper 회귀 테스트 추가)
 
 ## C. YouTube Subtitle
-- [ ] watch 페이지에서만 자막 토글이 활성화된다.
+- [x] watch 페이지에서만 자막 토글이 활성화된다. (근거: popup에서 YouTube 감지를 단순 host 포함에서 `isYouTubeWatchPageUrl`(hostname+`/watch`+`v` 파라미터) 검증으로 교체해 watch 외 페이지(home/results/channel/shorts 등)에서 자막 토글 비활성화, `youtube-page.test.ts`에 watch 허용/비watch 거부 회귀 테스트 추가)
 - [ ] 자동 자막(ASR)에서 과도한 재번역/깜빡임이 억제된다.
 - [ ] seek/pause/resume에서도 상태가 깨지지 않는다.
 - [ ] 캡션 미존재/권한 문제 시 명확한 메시지를 노출한다.

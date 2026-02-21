@@ -4,6 +4,7 @@ import type { EngineType } from '@naranhi/core';
 import { Toggle } from '@naranhi/ui';
 import { Select } from '@naranhi/ui';
 import { useSettings } from '../../hooks/useSettings';
+import { isYouTubeWatchPageUrl } from '../../lib/youtube-page';
 
 const ENGINE_OPTIONS = [
   { value: 'deepl', label: 'DeepL' },
@@ -29,7 +30,9 @@ export default function App() {
       if (!tab?.id) return;
 
       const url = tab.url || tab.pendingUrl || '';
-      setIsYouTube(url.includes('youtube.com'));
+      const isWatchPage = isYouTubeWatchPageUrl(url);
+      setIsYouTube(isWatchPage);
+      if (!isWatchPage) setYtEnabled(false);
 
       try {
         const pageState = await chrome.tabs.sendMessage(tab.id, {
@@ -40,7 +43,7 @@ export default function App() {
         // content script may not be loaded
       }
 
-      if (url.includes('youtube.com')) {
+      if (isWatchPage) {
         try {
           const ytState = await chrome.tabs.sendMessage(tab.id, {
             type: MESSAGE_TYPES.GET_YT_SUBTITLE_STATE,

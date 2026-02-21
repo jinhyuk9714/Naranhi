@@ -4,6 +4,7 @@ import {
   flattenSettingsPatch,
   inflateSettings,
   sanitizeProxyUrl,
+  sanitizeVisibleRootMargin,
 } from './settings-storage';
 
 describe('settings-storage', () => {
@@ -61,5 +62,45 @@ describe('settings-storage', () => {
     expect(sanitizeProxyUrl('')).toBe('http://localhost:8787');
     expect(sanitizeProxyUrl('ws://bad')).toBe('http://localhost:8787');
     expect(sanitizeProxyUrl('https://proxy.example.com/')).toBe('https://proxy.example.com');
+  });
+
+  it('rejects invalid option values and clamps numeric options safely', () => {
+    const inflated = inflateSettings({
+      engine: 'bad-engine',
+      displayMode: 'invalid-mode',
+      translationPosition: 'floating-anywhere',
+      theme: 'neon',
+      deeplFormality: 'ultra-formal',
+      openaiBaseUrl: 'not-a-url',
+      batchFlushMs: -500,
+      visibleRootMargin: 'calc(100vh)',
+    });
+
+    expect(inflated.engine).toBe('deepl');
+    expect(inflated.displayMode).toBe('bilingual');
+    expect(inflated.translationPosition).toBe('below');
+    expect(inflated.theme).toBe('auto');
+    expect(inflated.deepl.formality).toBe('');
+    expect(inflated.openai.baseUrl).toBe('https://api.openai.com/v1');
+    expect(inflated.batchFlushMs).toBe(20);
+    expect(inflated.visibleRootMargin).toBe('350px 0px 600px 0px');
+
+    const flat = flattenSettingsPatch({
+      batchFlushMs: 5000,
+      visibleRootMargin: '10px BAD 30px',
+      deepl: { formality: 'invalid' },
+      openai: { baseUrl: 'file:///tmp/nope' },
+    });
+
+    expect(flat.batchFlushMs).toBe(1000);
+    expect(flat.visibleRootMargin).toBe('350px 0px 600px 0px');
+    expect(flat.deeplFormality).toBe('');
+    expect(flat.openaiBaseUrl).toBe('https://api.openai.com/v1');
+  });
+
+  it('allows safe root margin token formats only', () => {
+    expect(sanitizeVisibleRootMargin('0px 0px 300px 0px')).toBe('0px 0px 300px 0px');
+    expect(sanitizeVisibleRootMargin('10%')).toBe('10%');
+    expect(sanitizeVisibleRootMargin('1em 2em')).toBe('350px 0px 600px 0px');
   });
 });

@@ -183,6 +183,31 @@ export function mapDeepLError(
   return { code: 'UNKNOWN', retryable: false, statusCode };
 }
 
+export function shouldRetryDeepLStatus(statusCode: number): boolean {
+  return statusCode === 429 || statusCode >= 500;
+}
+
+export function parseRetryAfterMs(value: string | null | undefined): number | null {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+
+  const seconds = Number(raw);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.floor(seconds * 1000);
+  }
+
+  const retryAt = Date.parse(raw);
+  if (!Number.isFinite(retryAt)) return null;
+  return Math.max(0, retryAt - Date.now());
+}
+
+export function computeBackoffDelayMs(attempt: number): number {
+  const safeAttempt = Math.max(0, Math.floor(attempt));
+  const base = 300;
+  const max = 4000;
+  return Math.min(max, base * 2 ** safeAttempt);
+}
+
 export function mapErrorToResponse(err: unknown): {
   statusCode: number;
   error: { code: string; message: string; retryable: boolean };

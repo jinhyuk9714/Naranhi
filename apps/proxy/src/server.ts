@@ -17,6 +17,9 @@ import {
   mapErrorToResponse,
   proxyError,
   resolveAllowedOrigin,
+  shouldRetryDeepLStatus,
+  parseRetryAfterMs,
+  computeBackoffDelayMs,
 } from './translate.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -56,6 +59,7 @@ const API_BASE = getEnv('DEEPL_API_BASE', 'https://api-free.deepl.com')!;
 const PORT = parseInt(getEnv('PORT', '8787')!, 10);
 const ALLOWED_ORIGINS = getEnv('ALLOWED_ORIGINS', 'local')!;
 const CACHE_TTL_MS = parseInt(getEnv('CACHE_TTL_MS', '86400000')!, 10);
+const DEEPL_RETRY_ATTEMPTS = parseInt(getEnv('DEEPL_RETRY_ATTEMPTS', '2')!, 10);
 
 if (!AUTH_KEY) {
   console.error('Missing DEEPL_AUTH_KEY. Set env var or create .env file.');
@@ -121,29 +125,44 @@ async function readJson(req: http.IncomingMessage): Promise<unknown> {
   }
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function deeplTranslate(normalizedPayload: ReturnType<typeof normalizeTranslatePayload>): Promise<unknown> {
   const body = buildDeepLBody(normalizedPayload);
-  const resp = await fetch(`${API_BASE}/v2/translate`, {
-    method: 'POST',
-    headers: {
-      authorization: `DeepL-Auth-Key ${AUTH_KEY}`,
-      'content-type': 'application/json',
-      'user-agent': 'NaranhiProxy/1.0',
-    },
-    body: JSON.stringify(body),
-  });
 
-  const data = (await resp.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!resp.ok) {
+  for (let attempt = 0; attempt <= DEEPL_RETRY_ATTEMPTS; attempt += 1) {
+    const resp = await fetch(`${API_BASE}/v2/translate`, {
+      method: 'POST',
+      headers: {
+        authorization: `DeepL-Auth-Key ${AUTH_KEY}`,
+        'content-type': 'application/json',
+        'user-agent': 'NaranhiProxy/1.0',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = (await resp.json().catch(() => null)) as Record<string, unknown> | null;
+    if (resp.ok) return data;
+
     const mapped = mapDeepLError(resp.status);
-    throw proxyError(
-      mapped.code,
-      (data?.message as string) || (data?.error as string) || `DeepL error ${resp.status}`,
-      mapped.statusCode,
-      mapped.retryable,
-    );
+    const canRetry = shouldRetryDeepLStatus(resp.status) && attempt < DEEPL_RETRY_ATTEMPTS;
+    if (!canRetry) {
+      throw proxyError(
+        mapped.code,
+        (data?.message as string) || (data?.error as string) || `DeepL error ${resp.status}`,
+        mapped.statusCode,
+        mapped.retryable,
+      );
+    }
+
+    const retryAfterMs = parseRetryAfterMs(resp.headers.get('retry-after'));
+    const backoffMs = computeBackoffDelayMs(attempt);
+    await sleep(retryAfterMs ?? backoffMs);
   }
-  return data;
+
+  throw proxyError('UNKNOWN', 'DeepL retry budget exhausted', 503, true);
 }
 
 // --- Server ---

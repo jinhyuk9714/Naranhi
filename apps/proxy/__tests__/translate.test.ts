@@ -7,6 +7,9 @@ import {
   normalizeTranslatePayload,
   proxyError,
   resolveAllowedOrigin,
+  shouldRetryDeepLStatus,
+  parseRetryAfterMs,
+  computeBackoffDelayMs,
 } from '../src/translate';
 
 describe('normalizeTranslatePayload', () => {
@@ -99,6 +102,28 @@ describe('mapDeepLError', () => {
     expect(mapDeepLError(429)).toEqual({ code: 'DEEPL_RATE_LIMIT', retryable: true, statusCode: 429 });
     expect(mapDeepLError(456)).toEqual({ code: 'DEEPL_QUOTA', retryable: false, statusCode: 456 });
     expect(mapDeepLError(503)).toEqual({ code: 'UNKNOWN', retryable: true, statusCode: 503 });
+  });
+});
+
+describe('deepl retry helpers', () => {
+  it('marks retryable statuses for rate-limit and server errors', () => {
+    expect(shouldRetryDeepLStatus(429)).toBe(true);
+    expect(shouldRetryDeepLStatus(503)).toBe(true);
+    expect(shouldRetryDeepLStatus(456)).toBe(false);
+    expect(shouldRetryDeepLStatus(400)).toBe(false);
+  });
+
+  it('parses Retry-After seconds/date and computes bounded backoff', () => {
+    expect(parseRetryAfterMs('2')).toBe(2000);
+    expect(parseRetryAfterMs('invalid')).toBeNull();
+
+    const delay0 = computeBackoffDelayMs(0);
+    const delay1 = computeBackoffDelayMs(1);
+    const delay10 = computeBackoffDelayMs(10);
+
+    expect(delay0).toBe(300);
+    expect(delay1).toBe(600);
+    expect(delay10).toBe(4000);
   });
 });
 

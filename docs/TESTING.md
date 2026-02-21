@@ -26,7 +26,8 @@ Checks:
 - YouTube manual captions: short adjacent lines merge into sentence-level translation where appropriate
 - YouTube subtitle toggle state remains synced after popup reopen
 - YouTube non-watch page: subtitle toggle disabled + 안내 문구 표시
-- No-caption video: `No captions detected on this video.` banner shown
+- No-caption video: `No captions detected on this video.` 안내 문구 shown
+- Caption permission/region 제한 영상: 권한 제한 안내 문구 shown
 - Hook unavailable case: DOM fallback still shows subtitle translations
 - Subtitle render anti-flicker: temporary miss keeps previous translated line briefly, then hides
 - Proxy `/segment` disabled (default): subtitle flow still works with heuristic-only split

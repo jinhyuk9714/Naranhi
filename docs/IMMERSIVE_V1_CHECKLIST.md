@@ -20,7 +20,7 @@
 - [x] watch 페이지에서만 자막 토글이 활성화된다. (근거: popup에서 YouTube 감지를 단순 host 포함에서 `isYouTubeWatchPageUrl`(hostname+`/watch`+`v` 파라미터) 검증으로 교체해 watch 외 페이지(home/results/channel/shorts 등)에서 자막 토글 비활성화, `youtube-page.test.ts`에 watch 허용/비watch 거부 회귀 테스트 추가)
 - [ ] 자동 자막(ASR)에서 과도한 재번역/깜빡임이 억제된다.
 - [ ] seek/pause/resume에서도 상태가 깨지지 않는다.
-- [ ] 캡션 미존재/권한 문제 시 명확한 메시지를 노출한다.
+- [x] 캡션 미존재/권한 문제 시 명확한 메시지를 노출한다. (근거: popup에 YouTube subtitle notice 상태를 추가해 `GET_YT_SUBTITLE_STATE`/`TOGGLE_YT_SUBTITLE` 실패 시 에러코드(`NO_CAPTIONS`, `CAPTION_PERMISSION_DENIED`, `NOT_WATCH_PAGE`) 및 런타임 연결 오류를 사용자 문구로 매핑해 노출, `youtube-subtitle-error.ts`/`youtube-subtitle-error.test.ts`로 코드·연결 실패·fallback 메시지 회귀 테스트 추가)
 
 ## D. Settings & State
 - [x] 설정 저장/복원(`chrome.storage`)이 일관된다. (근거: extension 공통 `settings-storage` 모듈(`inflateSettings`/`flattenSettingsPatch`)을 도입해 popup/options/sidepanel hook과 background가 동일 키 매핑/복원 로직을 공유하도록 통합, proxy URL sanitize 포함, `settings-storage.test.ts`로 flat↔nested 매핑 및 기본값/정규화 회귀 테스트 추가)

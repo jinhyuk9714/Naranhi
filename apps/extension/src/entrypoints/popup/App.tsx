@@ -5,6 +5,7 @@ import { Toggle } from '@naranhi/ui';
 import { Select } from '@naranhi/ui';
 import { useSettings } from '../../hooks/useSettings';
 import { isYouTubeWatchPageUrl } from '../../lib/youtube-page';
+import { resolveYtSubtitleErrorMessage } from '../../lib/youtube-subtitle-error';
 
 const ENGINE_OPTIONS = [
   { value: 'deepl', label: 'DeepL' },
@@ -22,6 +23,7 @@ export default function App() {
   const [pageEnabled, setPageEnabled] = useState(false);
   const [ytEnabled, setYtEnabled] = useState(false);
   const [isYouTube, setIsYouTube] = useState(false);
+  const [ytNotice, setYtNotice] = useState('');
 
   useEffect(() => {
     const syncFromActiveTab = async () => {
@@ -32,7 +34,12 @@ export default function App() {
       const url = tab.url || tab.pendingUrl || '';
       const isWatchPage = isYouTubeWatchPageUrl(url);
       setIsYouTube(isWatchPage);
-      if (!isWatchPage) setYtEnabled(false);
+      if (!isWatchPage) {
+        setYtEnabled(false);
+        setYtNotice('Open a YouTube watch page to use subtitle translation.');
+      } else {
+        setYtNotice('');
+      }
 
       try {
         const pageState = await chrome.tabs.sendMessage(tab.id, {
@@ -48,9 +55,16 @@ export default function App() {
           const ytState = await chrome.tabs.sendMessage(tab.id, {
             type: MESSAGE_TYPES.GET_YT_SUBTITLE_STATE,
           });
-          if (ytState?.ok) setYtEnabled(ytState.data.enabled);
-        } catch {
-          // not on YouTube
+          if (ytState?.ok) {
+            setYtEnabled(ytState.data.enabled);
+            setYtNotice('');
+          } else {
+            setYtEnabled(false);
+            setYtNotice(resolveYtSubtitleErrorMessage(ytState?.error));
+          }
+        } catch (err) {
+          setYtEnabled(false);
+          setYtNotice(resolveYtSubtitleErrorMessage(err));
         }
       }
     };
@@ -100,9 +114,16 @@ export default function App() {
       const resp = await chrome.tabs.sendMessage(tabId, {
         type: MESSAGE_TYPES.TOGGLE_YT_SUBTITLE,
       });
-      if (resp?.ok) setYtEnabled(resp.data.enabled);
-    } catch {
+      if (resp?.ok) {
+        setYtEnabled(resp.data.enabled);
+        setYtNotice('');
+      } else {
+        setYtEnabled((prev) => !prev); // revert on failure
+        setYtNotice(resolveYtSubtitleErrorMessage(resp?.error));
+      }
+    } catch (err) {
       setYtEnabled((prev) => !prev); // revert on failure
+      setYtNotice(resolveYtSubtitleErrorMessage(err));
     }
   }, []);
 
@@ -151,18 +172,21 @@ export default function App() {
         </div>
 
         {/* YouTube Subtitle Toggle */}
-        <div
-          className={`flex items-center justify-between py-2 px-3 rounded-lg ${
-            isYouTube ? 'bg-gray-50' : 'bg-gray-50 opacity-50'
-          }`}
-        >
-          <span className="text-sm font-medium text-gray-700">YouTube Subtitles</span>
-          <Toggle
-            checked={ytEnabled}
-            onChange={toggleYt}
-            disabled={!isYouTube}
-            size="sm"
-          />
+        <div>
+          <div
+            className={`flex items-center justify-between py-2 px-3 rounded-lg ${
+              isYouTube ? 'bg-gray-50' : 'bg-gray-50 opacity-50'
+            }`}
+          >
+            <span className="text-sm font-medium text-gray-700">YouTube Subtitles</span>
+            <Toggle
+              checked={ytEnabled}
+              onChange={toggleYt}
+              disabled={!isYouTube}
+              size="sm"
+            />
+          </div>
+          {ytNotice && <p className="mt-1 text-xs text-amber-700">{ytNotice}</p>}
         </div>
       </div>
 

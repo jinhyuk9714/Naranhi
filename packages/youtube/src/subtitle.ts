@@ -90,6 +90,11 @@ export class WindowPendingQueue {
     const key = String(windowKey || '').trim();
     const value = normalizeText(text);
     if (!key || !value) return false;
+
+    const pendingValue = this.pending.get(key);
+    const inflightValue = this.inflight.get(key);
+    if (pendingValue === value || inflightValue === value) return false;
+
     this.pending.set(key, value);
     return true;
   }

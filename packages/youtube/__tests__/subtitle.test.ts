@@ -56,4 +56,18 @@ describe('WindowPendingQueue', () => {
     expect(queue.hasPending()).toBe(true);
     expect(queue.take(6).length).toBe(1);
   });
+
+  it('suppresses duplicate ASR enqueue for same pending/inflight text', () => {
+    const queue = new WindowPendingQueue();
+
+    expect(queue.enqueue('window-0', 'same line')).toBe(true);
+    expect(queue.enqueue('window-0', 'same line')).toBe(false);
+
+    const batch = queue.take(1);
+    expect(batch.length).toBe(1);
+    expect(batch[0].text).toBe('same line');
+
+    expect(queue.enqueue('window-0', 'same line')).toBe(false);
+    expect(queue.enqueue('window-0', 'updated line')).toBe(true);
+  });
 });

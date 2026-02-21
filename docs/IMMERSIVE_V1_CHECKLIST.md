@@ -18,7 +18,7 @@
 
 ## C. YouTube Subtitle
 - [x] watch 페이지에서만 자막 토글이 활성화된다. (근거: popup에서 YouTube 감지를 단순 host 포함에서 `isYouTubeWatchPageUrl`(hostname+`/watch`+`v` 파라미터) 검증으로 교체해 watch 외 페이지(home/results/channel/shorts 등)에서 자막 토글 비활성화, `youtube-page.test.ts`에 watch 허용/비watch 거부 회귀 테스트 추가)
-- [ ] 자동 자막(ASR)에서 과도한 재번역/깜빡임이 억제된다.
+- [x] 자동 자막(ASR)에서 과도한 재번역/깜빡임이 억제된다. (근거: `WindowPendingQueue.enqueue`에서 window 단위로 pending/inflight와 동일 텍스트 재등록을 차단해 중복 번역 요청을 억제하고 ASR 갱신 시 불필요한 재번역/깜빡임을 감소, `packages/youtube/__tests__/subtitle.test.ts`에 동일 문장 중복 enqueue 억제 회귀 테스트 추가)
 - [x] seek/pause/resume에서도 상태가 깨지지 않는다. (근거: `render-policy`에 playback 스냅샷 기반 `resolveRenderTextWithPlayback` 추가로 pause 중 자막 유지(깜빡임 방지) 및 seek 불연속 시 stale 자막 즉시 리셋 처리, `render-policy.test.ts`에 pause→resume/seek 회귀 테스트 추가)
 - [x] 캡션 미존재/권한 문제 시 명확한 메시지를 노출한다. (근거: popup에 YouTube subtitle notice 상태를 추가해 `GET_YT_SUBTITLE_STATE`/`TOGGLE_YT_SUBTITLE` 실패 시 에러코드(`NO_CAPTIONS`, `CAPTION_PERMISSION_DENIED`, `NOT_WATCH_PAGE`) 및 런타임 연결 오류를 사용자 문구로 매핑해 노출, `youtube-subtitle-error.ts`/`youtube-subtitle-error.test.ts`로 코드·연결 실패·fallback 메시지 회귀 테스트 추가)
 

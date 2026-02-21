@@ -5,7 +5,7 @@
 - 각 항목은 코드 + 테스트/검증 근거가 있을 때만 체크한다.
 
 ## A. Core UX
-- [ ] 페이지 토글 ON/OFF가 즉시 반영되고 되돌림이 안정적이다.
+- [x] 페이지 토글 ON/OFF가 즉시 반영되고 되돌림이 안정적이다. (근거: `PageTranslator.toggle()`를 async boolean 반환으로 변경하고 content message handler가 실제 토글 완료 후 상태 응답하도록 수정, disable 이후 늦게 도착한 번역 응답 무시 가드(`enabled/activeRunId`) 추가, `translator.test.ts`에 stale response 무시/enable 중단 롤백 테스트 추가)
 - [ ] 원문/번역의 가독성이 깨지지 않는다(레이아웃/줄바꿈/간격).
 - [ ] 선택 번역(Context Menu)이 주요 사이트에서 동작한다.
 - [x] 번역 실패 시 사용자에게 복구 가능한 안내를 표시한다. (근거: content translator에서 배치 번역 실패 시 `showBanner(message, retryable, onRetry)` 호출 및 재시도 큐 재등록 구현, `apps/extension/src/entrypoints/content/translator.test.ts` 추가)

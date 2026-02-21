@@ -16,9 +16,11 @@ export default defineContentScript({
     // Listen for messages from background / popup
     chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       if (msg?.type === MESSAGE_TYPES.TOGGLE_PAGE) {
-        translator.toggle();
-        sendResponse({ ok: true, data: { enabled: translator.isEnabled() } });
-        return;
+        void translator
+          .toggle()
+          .then((enabled) => sendResponse({ ok: true, data: { enabled } }))
+          .catch(() => sendResponse({ ok: false, error: { message: 'Failed to toggle page translation' } }));
+        return true;
       }
 
       if (msg?.type === MESSAGE_TYPES.GET_PAGE_STATE) {

@@ -27,6 +27,8 @@ interface TranslatorState {
 const MAX_BATCH_ITEMS = 20;
 
 export class PageTranslator {
+  private lifecycleVersion = 0;
+
   private state: TranslatorState = {
     enabled: false,
     activeRunId: null,
@@ -41,8 +43,10 @@ export class PageTranslator {
   private flushTimer: ReturnType<typeof setInterval> | null = null;
   private blockElements = new Map<string, HTMLElement>();
 
-  async enable(): Promise<void> {
-    if (this.state.enabled) return;
+  async enable(): Promise<boolean> {
+    if (this.state.enabled) return true;
+
+    const version = ++this.lifecycleVersion;
 
     // Load settings
     const settings = await chrome.storage.sync.get({
@@ -51,6 +55,8 @@ export class PageTranslator {
       visibleRootMargin: '350px 0px 600px 0px',
       extractionMode: 'readability',
     });
+
+    if (version !== this.lifecycleVersion) return this.state.enabled;
 
     this.state.visibleOnly = settings.visibleOnly !== false;
     this.state.batchFlushMs = Number(settings.batchFlushMs) || 120;
@@ -68,7 +74,7 @@ export class PageTranslator {
         ? detectPrimaryContainer(document)
         : document.body;
 
-    if (!container) return;
+    if (!container) return this.state.enabled;
 
     const blocks = findTranslatableBlocks(container);
     const items = assignBlockIds(blocks);
@@ -84,9 +90,12 @@ export class PageTranslator {
       // Translate all blocks at once
       await this.translateBatch(items.map((i) => ({ id: i.id, text: i.text })));
     }
+
+    return this.state.enabled;
   }
 
   disable(): void {
+    this.lifecycleVersion += 1;
     this.state.enabled = false;
     this.state.activeRunId = null;
     this.stopFlushTimer();
@@ -97,12 +106,13 @@ export class PageTranslator {
     removeAllTranslations();
   }
 
-  toggle(): void {
+  async toggle(): Promise<boolean> {
     if (this.state.enabled) {
       this.disable();
-    } else {
-      void this.enable();
+      return false;
     }
+
+    return this.enable();
   }
 
   isEnabled(): boolean {
@@ -176,6 +186,7 @@ export class PageTranslator {
       }
 
       if (response.data?.runId !== runId) return;
+      if (!this.state.enabled || this.state.activeRunId !== runId) return;
 
       const translations = response.data.translations || [];
       const translatedIds: string[] = [];
@@ -189,6 +200,8 @@ export class PageTranslator {
 
       this.queue.markTranslated(translatedIds);
     } catch (err) {
+      if (!this.state.enabled || this.state.activeRunId !== runId) return;
+
       // Mark items as failed so they can be retried
       const failedIds = items.map((i) => i.id);
       this.queue.clearInflight(failedIds);

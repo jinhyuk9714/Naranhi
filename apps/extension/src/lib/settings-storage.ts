@@ -3,6 +3,7 @@ import type { NaranhiSettings } from '@naranhi/core';
 
 type FlatStorage = Record<string, unknown>;
 type PartialSettings = Partial<NaranhiSettings>;
+type StorageChanges = Record<string, { newValue?: unknown }>;
 
 export function sanitizeProxyUrl(raw: unknown): string {
   const value = String(raw || '').trim().replace(/\/$/, '');
@@ -40,6 +41,16 @@ export function inflateSettings(stored: FlatStorage): NaranhiSettings {
     cacheEnabled: Boolean(stored.cacheEnabled),
     shortcuts: (stored.shortcuts as Record<string, string>) || DEFAULT_SETTINGS.shortcuts,
   } as NaranhiSettings;
+}
+
+export function extractSyncStorageChanges(changes: StorageChanges): FlatStorage {
+  const flat: FlatStorage = {};
+  for (const [key, change] of Object.entries(changes || {})) {
+    if (change && Object.prototype.hasOwnProperty.call(change, 'newValue')) {
+      flat[key] = change.newValue;
+    }
+  }
+  return flat;
 }
 
 export function flattenSettingsPatch(updates: PartialSettings): FlatStorage {

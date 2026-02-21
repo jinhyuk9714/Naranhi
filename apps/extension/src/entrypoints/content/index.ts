@@ -18,7 +18,10 @@ export default defineContentScript({
       if (msg?.type === MESSAGE_TYPES.TOGGLE_PAGE) {
         void translator
           .toggle()
-          .then((enabled) => sendResponse({ ok: true, data: { enabled } }))
+          .then((enabled) => {
+            void chrome.runtime.sendMessage({ type: MESSAGE_TYPES.PAGE_STATE_CHANGED, enabled });
+            sendResponse({ ok: true, data: { enabled } });
+          })
           .catch(() => sendResponse({ ok: false, error: { message: 'Failed to toggle page translation' } }));
         return true;
       }

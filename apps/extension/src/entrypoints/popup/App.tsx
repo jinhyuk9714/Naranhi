@@ -23,13 +23,13 @@ export default function App() {
   const [isYouTube, setIsYouTube] = useState(false);
 
   useEffect(() => {
-    // Query active tab state
-    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+    const syncFromActiveTab = async () => {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       const tab = tabs[0];
       if (!tab?.id) return;
 
-      const url = tab.url || '';
-      setIsYouTube(url.includes('youtube.com/watch'));
+      const url = tab.url || tab.pendingUrl || '';
+      setIsYouTube(url.includes('youtube.com'));
 
       try {
         const pageState = await chrome.tabs.sendMessage(tab.id, {
@@ -40,18 +40,39 @@ export default function App() {
         // content script may not be loaded
       }
 
-      try {
-        const ytState = await chrome.tabs.sendMessage(tab.id, {
-          type: MESSAGE_TYPES.GET_YT_SUBTITLE_STATE,
-        });
-        if (ytState?.ok) setYtEnabled(ytState.data.enabled);
-      } catch {
-        // not on YouTube
+      if (url.includes('youtube.com')) {
+        try {
+          const ytState = await chrome.tabs.sendMessage(tab.id, {
+            type: MESSAGE_TYPES.GET_YT_SUBTITLE_STATE,
+          });
+          if (ytState?.ok) setYtEnabled(ytState.data.enabled);
+        } catch {
+          // not on YouTube
+        }
       }
-    });
+    };
+
+    void syncFromActiveTab();
+
+    const onMessage = (msg: { type?: string; enabled?: boolean }) => {
+      if (msg?.type === MESSAGE_TYPES.PAGE_STATE_CHANGED && typeof msg.enabled === 'boolean') {
+        setPageEnabled(msg.enabled);
+      }
+    };
+
+    const onTabActivated = () => void syncFromActiveTab();
+
+    chrome.runtime.onMessage.addListener(onMessage);
+    chrome.tabs.onActivated.addListener(onTabActivated);
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(onMessage);
+      chrome.tabs.onActivated.removeListener(onTabActivated);
+    };
   }, []);
 
   const togglePage = useCallback(async () => {
+    setPageEnabled((prev) => !prev); // optimistic update
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     const tabId = tabs[0]?.id;
     if (!tabId) return;
@@ -62,11 +83,12 @@ export default function App() {
       });
       if (resp?.ok) setPageEnabled(resp.data.enabled);
     } catch {
-      // failed
+      setPageEnabled((prev) => !prev); // revert on failure
     }
   }, []);
 
   const toggleYt = useCallback(async () => {
+    setYtEnabled((prev) => !prev); // optimistic update
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     const tabId = tabs[0]?.id;
     if (!tabId) return;
@@ -77,7 +99,7 @@ export default function App() {
       });
       if (resp?.ok) setYtEnabled(resp.data.enabled);
     } catch {
-      // failed
+      setYtEnabled((prev) => !prev); // revert on failure
     }
   }, []);
 

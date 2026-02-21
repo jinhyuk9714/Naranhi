@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DEFAULT_SETTINGS } from '@naranhi/core';
 import type { NaranhiSettings } from '@naranhi/core';
-import { inflateSettings, flattenSettingsPatch } from '../lib/settings-storage';
+import { inflateSettings, flattenSettingsPatch, extractSyncStorageChanges } from '../lib/settings-storage';
 
 type PartialSettings = Partial<NaranhiSettings>;
 
@@ -14,6 +14,16 @@ export function useSettings() {
       setSettings(inflateSettings(stored));
       setLoading(false);
     });
+
+    const onChanged = (changes: Record<string, { newValue?: unknown }>, areaName: string) => {
+      if (areaName !== 'sync') return;
+      const patch = extractSyncStorageChanges(changes);
+      if (!Object.keys(patch).length) return;
+      setSettings((prev) => inflateSettings({ ...flattenSettingsPatch(prev), ...patch }));
+    };
+
+    chrome.storage.onChanged.addListener(onChanged);
+    return () => chrome.storage.onChanged.removeListener(onChanged);
   }, []);
 
   const updateSettings = useCallback(async (updates: PartialSettings) => {

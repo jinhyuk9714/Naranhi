@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { flattenSettingsPatch, inflateSettings, sanitizeProxyUrl } from './settings-storage';
+import {
+  extractSyncStorageChanges,
+  flattenSettingsPatch,
+  inflateSettings,
+  sanitizeProxyUrl,
+} from './settings-storage';
 
 describe('settings-storage', () => {
   it('inflates legacy/flat keys into normalized settings', () => {
@@ -37,6 +42,19 @@ describe('settings-storage', () => {
     expect(flat.openaiModel).toBe('gpt-4o');
     expect(flat.visibleRootMargin).toBe('0px 0px 300px 0px');
     expect(flat.shortcuts).toEqual({ toggle: 'Alt+T' });
+  });
+
+  it('extracts sync storage new values into flat patch', () => {
+    const patch = extractSyncStorageChanges({
+      targetLang: { oldValue: 'EN', newValue: 'JA' },
+      deeplProxyUrl: { newValue: 'https://proxy.example.com' },
+      ignored: {},
+    });
+
+    expect(patch).toEqual({
+      targetLang: 'JA',
+      deeplProxyUrl: 'https://proxy.example.com',
+    });
   });
 
   it('sanitizes invalid proxy url to localhost default', () => {

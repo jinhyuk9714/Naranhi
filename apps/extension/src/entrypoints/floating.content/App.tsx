@@ -17,13 +17,22 @@ export default function FloatingButton() {
     });
   }, []);
 
-  // Check page state on mount
+  // Check page state on mount + keep synced with other surfaces
   useEffect(() => {
     chrome.runtime.sendMessage({ type: MESSAGE_TYPES.GET_PAGE_STATE })
       .then((resp: { ok: boolean; data: { enabled: boolean } }) => {
         if (resp?.ok) setPageEnabled(resp.data.enabled);
       })
       .catch(() => {});
+
+    const onMessage = (msg: { type?: string; enabled?: boolean }) => {
+      if (msg?.type === MESSAGE_TYPES.PAGE_STATE_CHANGED && typeof msg.enabled === 'boolean') {
+        setPageEnabled(msg.enabled);
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(onMessage);
+    return () => chrome.runtime.onMessage.removeListener(onMessage);
   }, []);
 
   const toggleTranslation = useCallback(async () => {

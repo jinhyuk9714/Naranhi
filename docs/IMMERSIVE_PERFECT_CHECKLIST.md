@@ -25,8 +25,8 @@
 
 ## D. 회귀 테스트
 
-- [ ] `pnpm --filter @naranhi/extension test` 통과.
-- [ ] `pnpm --filter @naranhi/extension build` 통과.
+- [x] `pnpm --filter @naranhi/extension test` 통과.
+- [x] `pnpm --filter @naranhi/extension build` 통과.
 - [ ] `pnpm --filter @naranhi/proxy test` 통과.
 - [ ] 새로 추가한 유튜브 관련 로직에 단위 테스트가 함께 추가되어 있다.
 

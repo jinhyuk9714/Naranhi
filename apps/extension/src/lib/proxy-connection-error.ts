@@ -1,6 +1,6 @@
 type ProxyErrorKind = 'invalid_url' | 'http_error' | 'timeout' | 'proxy_not_running' | 'address_error';
 
-const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
 
 export function resolveProxyConnectionErrorMessage(input: {
   proxyUrl: string;
@@ -39,7 +39,7 @@ function classifyProxyError(input: { proxyUrl: string; status?: number; error?: 
 
   if (typeof status === 'number') return 'http_error';
 
-  if (error instanceof DOMException && error.name === 'AbortError') return 'timeout';
+  if (isAbortLikeError(error)) return 'timeout';
 
   const host = tryGetHost(proxyUrl);
   if (host && LOCAL_HOSTS.has(host)) return 'proxy_not_running';
@@ -64,4 +64,10 @@ function tryGetHost(value: string): string | null {
   } catch {
     return null;
   }
+}
+
+function isAbortLikeError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const name = 'name' in error ? String((error as { name?: unknown }).name || '') : '';
+  return name === 'AbortError';
 }

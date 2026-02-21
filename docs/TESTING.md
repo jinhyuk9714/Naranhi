@@ -34,6 +34,45 @@ Checks:
 - Proxy `/segment` enabled: low-confidence English ASR windows can refine sentence boundaries without blocking playback
 - User report video `https://www.youtube.com/watch?v=Ce1x-yS1Jpo&t=2128s`: stable translation behavior
 
+## YouTube E2E manual scenario (v1 candidate)
+
+### Scenario 1 — watch page toggle sync
+1. Open any `youtube.com/watch` page with captions available.
+2. Open popup and confirm `YouTube Subtitles` toggle is enabled in UI.
+3. Toggle OFF, then ON.
+4. Reopen popup.
+
+Expected:
+- toggle response is immediate on each click
+- popup UI state matches actual CC state after reopen (no stale state)
+
+### Scenario 2 — non-watch page guard
+1. Open YouTube home/search/channel page (non-watch URL).
+2. Open popup.
+
+Expected:
+- `YouTube Subtitles` toggle is disabled
+- notice text is `Open a YouTube watch page to use subtitle translation.`
+
+### Scenario 3 — no-caption / permission denied messaging
+1. Open a watch video with no captions.
+2. Open popup and try subtitle toggle.
+3. Open a region/permission-restricted caption video and repeat.
+
+Expected:
+- no-caption case shows `No captions detected on this video.`
+- restricted case shows `Captions are unavailable on this video due to permission or region restrictions.`
+- error code/message mapping remains consistent with content controller responses
+
+### Scenario 4 — seek/pause/resume anti-flicker
+1. On watch page, enable subtitle translation.
+2. Pause during active subtitle, resume, then seek far ahead/back.
+
+Expected:
+- while paused: current translated line holds steady
+- resume with new subtitle: line updates without blank flicker burst
+- seek discontinuity: stale previous line is cleared promptly
+
 ## Unit tests
 Run:
 ```bash

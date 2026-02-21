@@ -22,6 +22,8 @@ This candidate brings Naranhi to immersive-translate-level core behavior for pag
 - Clear user-facing notices for no-caption and permission-restricted videos
 - Playback-aware rendering for seek/pause/resume stability
 - ASR duplicate suppression to reduce retranslation/flicker
+- Error-code ↔ user-message contract tests added (`NOT_WATCH_PAGE` / `NO_CAPTIONS` / `CAPTION_PERMISSION_DENIED`)
+- Popup-level toggle sync test added (watch page ON/OFF response and reopen-state sync)
 
 ### Settings & Security
 - Unified settings mapping across popup/options/sidepanel/background

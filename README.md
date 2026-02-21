@@ -51,10 +51,75 @@ pnpm --filter @naranhi/extension build
 ```
 
 - Chrome 확장 프로그램 로드 경로: `apps/extension/.output/chrome-mv3`
+- `apps/extension/.output/chrome-mv3-dev`는 개발(HMR) 산출물입니다. 이 경로를 로드하면 `ws://localhost:3000` 연결 오류가 날 수 있습니다.
 
 ### 4) 확장 설정
 - Extension → Settings → DeepL Proxy URL 설정
 - 로컬 기본값: `http://localhost:8787`
+
+## 트러블슈팅
+
+### 옵션에서 `Failed to fetch` + `8787` 연결 테스트 실패
+
+대부분 프록시 서버가 실행 중이 아니어서 발생합니다.
+
+```bash
+cd /Users/sungjh/Naranhi/apps/proxy
+pnpm dev
+```
+
+다른 터미널에서 상태 확인:
+
+```bash
+curl -i http://localhost:8787/health
+```
+
+정상 응답은 `HTTP/1.1 200 OK` + `ok` 입니다.
+
+추가 체크:
+
+1. 옵션의 `Proxy URL`이 정확히 `http://localhost:8787` 또는 `http://127.0.0.1:8787`인지 확인
+2. 확장 프로그램을 재로드하고 `Test Connection` 재실행
+
+### 유튜브 자막 번역이 안 될 때 (점검 순서)
+
+아래 순서대로 확인하면 대부분 바로 원인 구분이 됩니다.
+
+1. **watch 페이지인지 확인**  
+   URL이 `https://www.youtube.com/watch?...` 형태가 아니면 동작하지 않습니다.
+2. **팝업 메시지 확인**  
+   - `Open a YouTube watch page...` → watch 페이지 아님  
+   - `No captions detected on this video.` → 자막 자체 없음  
+   - `Captions are unavailable...` → 영상 권한/지역 제한
+3. **유튜브 자막 버튼(CC) 상태 확인**  
+   플레이어에 CC 버튼이 없거나 비활성(회색/잠김)이면 확장에서 켤 수 없습니다.
+4. **확장 상태 동기화 확인**  
+   watch 페이지에서 팝업을 닫았다 다시 열어 `YouTube Subtitles` 토글 상태가 실제 CC 상태와 일치하는지 확인합니다.
+5. **content script 재연결 확인**  
+   탭 새로고침 후 다시 토글합니다.  
+   연결 오류(Receiving end does not exist)면 새로고침으로 복구됩니다.
+
+### `WebSocket connection to 'ws://localhost:3000/' failed (ERR_CONNECTION_REFUSED)`
+
+확장 프로그램이 개발(HMR) 빌드(`chrome-mv3-dev`)로 로드된 상태에서 개발 서버가 꺼져 있으면 발생합니다.
+
+```bash
+cd /Users/sungjh/Naranhi
+pnpm --filter @naranhi/extension clean
+pnpm --filter @naranhi/extension build
+```
+
+그 다음 브라우저 확장 관리 페이지에서:
+
+1. 기존 개발 빌드(`chrome-mv3-dev`)를 제거
+2. `apps/extension/.output/chrome-mv3`를 다시 로드
+
+개발 모드(HMR)가 필요하면 아래처럼 서버를 켠 상태를 유지해야 합니다.
+
+```bash
+cd /Users/sungjh/Naranhi
+pnpm --filter @naranhi/extension dev
+```
 
 ## 데모 시나리오
 - Wikipedia: 페이지 토글 ON/OFF + visible-only 점진 번역

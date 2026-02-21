@@ -17,6 +17,7 @@ import type {
 } from '@naranhi/core';
 import { EngineManager } from '@naranhi/engines';
 import type { EngineConfig } from '@naranhi/engines';
+import { InflightTranslations } from './inflight';
 
 export default defineBackground(() => {
   // --- Constants ---
@@ -32,6 +33,7 @@ export default defineBackground(() => {
 
   // --- Memory Cache ---
   const memoryCache = new Map<string, { value: string; ts: number }>();
+  const inflightTranslations = new InflightTranslations<string>();
 
   // --- Engine Manager (lazily initialized) ---
   let engineManager: EngineManager | null = null;
@@ -205,6 +207,7 @@ export default defineBackground(() => {
 
     const translationByKey = new Map<string, string>();
     const missingItems: TranslationItem[] = [];
+    const waitingInflight = new Map<string, Promise<string>>();
 
     for (const [cacheKey, uniqueItem] of uniqueByKey.entries()) {
       if (useCache) {
@@ -222,8 +225,17 @@ export default defineBackground(() => {
           }
         }
       }
+
+      const inflight = inflightTranslations.wait(cacheKey);
+      if (inflight) {
+        waitingInflight.set(cacheKey, inflight);
+        continue;
+      }
+
       missingItems.push(uniqueItem);
     }
+
+    const claimedKeys = inflightTranslations.claim(missingItems.map((item) => item.id));
 
     // Translate missing items via engine
     if (missingItems.length) {
@@ -237,23 +249,29 @@ export default defineBackground(() => {
       });
 
       const fetchedEntries = new Map<string, string>();
-      for (const batch of batches) {
-        const results = await manager.translate({
-          items: batch,
-          targetLang: settings.targetLang,
-          sourceLang: settings.sourceLang || undefined,
-          options: normalizedOptions,
-        });
+      try {
+        for (const batch of batches) {
+          const results = await manager.translate({
+            items: batch,
+            targetLang: settings.targetLang,
+            sourceLang: settings.sourceLang || undefined,
+            options: normalizedOptions,
+          });
 
-        const byId = new Map(results.map((r) => [r.id, r.translatedText]));
-        for (const requestItem of batch) {
-          const translated = byId.get(requestItem.id);
-          if (translated === undefined) {
-            throw makeError('UNKNOWN', 'Translation response missing item', true);
+          const byId = new Map(results.map((r) => [r.id, r.translatedText]));
+          for (const requestItem of batch) {
+            const translated = byId.get(requestItem.id);
+            if (translated === undefined) {
+              throw makeError('UNKNOWN', 'Translation response missing item', true);
+            }
+            translationByKey.set(requestItem.id, translated);
+            fetchedEntries.set(requestItem.id, translated);
+            inflightTranslations.resolve(requestItem.id, translated);
           }
-          translationByKey.set(requestItem.id, translated);
-          fetchedEntries.set(requestItem.id, translated);
         }
+      } catch (err) {
+        inflightTranslations.rejectAll(claimedKeys, err);
+        throw err;
       }
 
       if (useCache) {
@@ -261,6 +279,12 @@ export default defineBackground(() => {
           setMemoryCache(key, value);
           if (persistent) writePersistentCache(persistent, key, value);
         }
+      }
+    }
+
+    if (waitingInflight.size) {
+      for (const [key, pending] of waitingInflight.entries()) {
+        translationByKey.set(key, await pending);
       }
     }
 

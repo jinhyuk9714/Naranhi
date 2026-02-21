@@ -12,19 +12,21 @@
 - subtitle stabilization for YouTube auto-captions (hook-first + fallback) - implemented (v0.2.2)
 - subtitle quality parity tuning (manual merge + DeepL preset/context + anti-flicker + optional AI splitter) - implemented (v0.2.3)
 
-### v0.2 checklist
-- [x] Readability/legacy extraction mode switch
-- [x] visible-only incremental queue with observer
-- [x] options for extraction mode + visible-only tuning
-- [x] YouTube subtitle translation
-- [x] YouTube subtitle quality parity tuning (v0.2.3)
+## v1 candidate (current)
 
-## v0.3
-- document translation (PDF/SRT/etc) via DeepL Document API
-- glossary support
-- cloud-hosted proxy + per-user keys (BYOK) or billing
+### Done in codebase
+- Core UX: page toggle stability, readability-safe rendering, selection translate, failure recovery banner
+- Translation pipeline: visible-only progressive translation, long paragraph split/merge stability, cache/inflight dedupe, DeepL retry/backoff defense
+- YouTube subtitle: watch-page-only toggle, ASR duplicate suppression, seek/pause/resume-safe render, no-caption/permission messaging
+- Settings & state: unified storage mapping, popup/sidepanel/content sync, strict option validation, client secret non-persistence
+- Quality gates: lint/test/build green + manual verification snapshot documented
 
-## v1
+### Remaining before final store release
 - per-site rules
 - per-language profiles
-- UX polish + store release
+- release packaging/publishing polish
+
+## v1.1+
+- document translation (PDF/SRT/etc)
+- glossary support
+- cloud-hosted proxy + BYOK/billing model

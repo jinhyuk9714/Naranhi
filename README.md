@@ -1,49 +1,71 @@
-# DualRead — DeepL-powered “Immersive Translate”-style extension (Codex Starter Kit)
+# Naranhi — Immersive bilingual web/page translator (v1 candidate)
 
-Build a browser extension that shows **bilingual web pages** (original + translation), powered by **DeepL API**.
+Naranhi is a Chrome/Edge MV3 extension for immersive reading:
+- page bilingual translation (original + translated)
+- selection translation (context menu)
+- YouTube subtitle bilingual overlay with ASR stabilization
 
-> ⚠️ Important: DeepL API **cannot be called directly from browser code** due to CORS + key exposure concerns.
-> This kit includes a tiny **local proxy server** that keeps your DeepL key secret and adds CORS headers.
+DeepL/OpenAI/Google translation is routed through the project proxy/engine layer.
 
-## What’s included
-- `AGENTS.md` — Codex working agreement (source of truth)
-- `.codex/config.toml` — project Codex config (safe defaults)
-- `.agents/skills/*` — reusable Codex skills
-- `docs/` — PRD, architecture, DeepL constraints, prompt library
-- `apps/extension/` — minimal Chrome/Edge extension (Manifest V3)
-- `apps/proxy/` — minimal Node proxy server (no dependencies)
+## Current v1 candidate scope
 
-## Quick start (local)
-### 0) Prereqs
-- Node.js 18+ (or 20+)
+### Implemented
+- Page translation toggle (stable ON/OFF rollback)
+- Readability-aware block extraction + safe DOM injection policy
+- Visible-only incremental translation queue (IntersectionObserver + fallback)
+- Translation retry banner for recoverable failures
+- Selection translate from context menu on major sites
+- Cache dedupe (memory/local + in-flight dedupe)
+- DeepL limit defense (429/5xx retry, Retry-After/backoff)
+- YouTube subtitle toggle only on watch pages
+- YouTube no-caption/permission error messaging
+- ASR retranslation/flicker suppression and seek/pause/resume-safe rendering
+- Settings synchronization across popup/sidepanel/content
+- Client-side secret key storage blocked (backend-only secret policy)
 
-### 1) Get a DeepL API key
-Create a DeepL API account (Free or Pro) and obtain an auth key.
+### Known limits
+- Per-site rules and per-language profiles are not included in this candidate
+- Document translation (PDF/SRT upload flow) is out of scope for this release
+- Cloud proxy deployment/BYOK billing flow is not bundled
 
-### 2) Start the proxy
+## Setup
+
+### 1) Install
 ```bash
-cd apps/proxy
-DEEPL_AUTH_KEY="YOUR_KEY" \
-DEEPL_API_BASE="https://api-free.deepl.com" \
-node server.mjs
+pnpm install
 ```
 
-If you use DeepL API Pro, set:
-- `DEEPL_API_BASE="https://api.deepl.com"`
+### 2) Run proxy
+```bash
+cd apps/proxy
+DEEPL_AUTH_KEY="YOUR_KEY" pnpm dev
+```
 
-### 3) Load the extension
-1. Open Chrome → `chrome://extensions`
-2. Enable Developer mode
-3. “Load unpacked” → select `apps/extension`
+(DeepL Pro users can set `DEEPL_API_BASE=https://api.deepl.com`.)
 
-### 4) Configure extension
-Click extension → Settings → set Proxy URL to:
-- `http://localhost:8787`
+### 3) Build extension
+```bash
+cd /Users/sungjh/Naranhi
+pnpm --filter @naranhi/extension build
+```
 
-## MVP features (v0.1)
-- Toggle **bilingual page translation**
-- Translate selection (context menu)
-- Basic batching + local caching
+Load unpacked from:
+- `apps/extension/.output/chrome-mv3`
 
-## Not affiliated
-This project is **not affiliated** with DeepL or Immersive Translate.
+### 4) Configure
+- Extension → Settings → DeepL proxy URL
+- Default local: `http://localhost:8787`
+
+## Demo scenarios
+- Wikipedia article: page toggle ON/OFF and visible-only progressive translation
+- Blog/news page: selection translate via context menu
+- YouTube watch page: subtitle toggle, no-caption 안내 문구, seek/pause/resume stability
+
+## Validation
+```bash
+pnpm lint
+pnpm test
+pnpm build
+```
+
+See `docs/TESTING.md` for the latest v1 candidate verification snapshot.

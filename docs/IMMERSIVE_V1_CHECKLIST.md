@@ -35,10 +35,10 @@
 - [x] 주요 수동 시나리오(문서) 점검 완료 (근거: `docs/TESTING.md`에 v1 candidate 수동 시나리오 점검 결과 스냅샷 추가)
 
 ## F. Docs & Release
-- [ ] README에 설치/실행/데모/한계가 최신 상태로 반영된다.
+- [x] README에 설치/실행/데모/한계가 최신 상태로 반영된다. (근거: README를 v1 candidate 기준으로 전면 갱신해 구현 기능/known limits/설치·실행(build+proxy)/데모 시나리오/검증 명령을 최신 상태로 정리)
 - [x] `docs/TESTING.md` 수동 테스트 결과가 최신화된다. (근거: `Latest verification snapshot (v1 candidate)` 섹션 추가로 자동 게이트(lint/test/build)와 수동 시나리오 점검 결과 최신 반영)
-- [ ] `docs/ROADMAP.md` v1 항목이 실제 구현 상태와 일치한다.
-- [ ] 릴리즈 노트(v1 후보) 문서가 추가된다.
+- [x] `docs/ROADMAP.md` v1 항목이 실제 구현 상태와 일치한다. (근거: ROADMAP에 `v1 candidate (current)` 섹션을 추가해 완료된 구현 범위(Core/Pipeline/YouTube/Settings/Quality)와 남은 출시 갭(per-site rules/profile/publishing)을 명시)
+- [x] 릴리즈 노트(v1 후보) 문서가 추가된다. (근거: `docs/RELEASE_NOTES_V1_CANDIDATE.md` 신규 추가 — 핵심 변경점(Core/Pipeline/YouTube/Settings), 검증 스냅샷, known gaps, 업그레이드 노트 포함)
 
 ## Finish
 - [ ] 두 봇이 최종 리뷰 후 `FLAGDOCK_DONE`을 선언한다.

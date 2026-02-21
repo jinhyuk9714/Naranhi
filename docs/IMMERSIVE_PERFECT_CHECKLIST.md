@@ -20,14 +20,14 @@
 ## C. Proxy/Engine 안정성
 
 - [ ] `apps/proxy`가 `PORT=8787`에서 정상 실행되고 `/health`가 200을 반환한다.
-- [ ] `/translate` 실패 시 구조화 오류 코드/메시지 매핑이 유지된다.
+- [x] `/translate` 실패 시 구조화 오류 코드/메시지 매핑이 유지된다.
 - [x] 옵션의 `Test Connection` 실패 메시지가 실제 원인(미실행/주소오류/HTTP오류)을 구분해 보여준다.
 
 ## D. 회귀 테스트
 
 - [x] `pnpm --filter @naranhi/extension test` 통과.
 - [x] `pnpm --filter @naranhi/extension build` 통과.
-- [ ] `pnpm --filter @naranhi/proxy test` 통과.
+- [x] `pnpm --filter @naranhi/proxy test` 통과.
 - [x] 새로 추가한 유튜브 관련 로직에 단위 테스트가 함께 추가되어 있다.
 
 ## E. 문서/운영

@@ -9,6 +9,20 @@ const MIN_TEXT_LENGTH = 20;
 
 const BLOCK_SELECTORS = 'p, li, blockquote, h1, h2, h3, h4, h5, h6, td, th, dd, dt, figcaption';
 
+export type InjectionMode = 'append-inside' | 'insert-after';
+
+const APPEND_INSIDE_TAGS = new Set(['LI', 'TD', 'TH', 'DT', 'DD', 'FIGCAPTION']);
+const STRUCTURE_SENSITIVE_PARENTS = new Set(['TR', 'TBODY', 'THEAD', 'TFOOT', 'TABLE', 'UL', 'OL', 'DL']);
+
+export function getInjectionMode(tagName: string, parentTagName: string = ''): InjectionMode {
+  const normalizedTag = String(tagName || '').toUpperCase();
+  const normalizedParent = String(parentTagName || '').toUpperCase();
+
+  if (APPEND_INSIDE_TAGS.has(normalizedTag)) return 'append-inside';
+  if (STRUCTURE_SENSITIVE_PARENTS.has(normalizedParent)) return 'append-inside';
+  return 'insert-after';
+}
+
 /**
  * Inject CSS styles for translation blocks.
  */
@@ -27,6 +41,11 @@ export function injectStyles(): void {
       color: inherit;
       line-height: 1.6;
       white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: keep-all;
+    }
+    .${TRANSLATION_CLASS}.naranhi-translation--inside {
+      margin-top: 8px;
     }
     @media (prefers-color-scheme: dark) {
       .${TRANSLATION_CLASS} {
@@ -119,13 +138,20 @@ export function injectTranslation(blockId: string, translatedText: string): void
   // Remove existing translation for this block
   removeTranslation(blockId);
 
-  const original = document.querySelector(`[${BLOCK_ID_ATTR}="${blockId}"]`);
+  const original = document.querySelector(`[${BLOCK_ID_ATTR}="${blockId}"]`) as HTMLElement | null;
   if (!original) return;
 
   const translationDiv = document.createElement('div');
   translationDiv.className = TRANSLATION_CLASS;
   translationDiv.setAttribute(TRANSLATION_ATTR, blockId);
   translationDiv.textContent = translatedText;
+
+  const mode = getInjectionMode(original.tagName, original.parentElement?.tagName || '');
+  if (mode === 'append-inside') {
+    translationDiv.classList.add('naranhi-translation--inside');
+    original.appendChild(translationDiv);
+    return;
+  }
 
   original.insertAdjacentElement('afterend', translationDiv);
 }

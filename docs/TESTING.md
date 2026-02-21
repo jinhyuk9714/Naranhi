@@ -9,7 +9,7 @@ Sites:
 Checks:
 - Toggle translation on/off
 - No layout breakage (basic)
-- Selection translate tooltip (`Translate with Naranhi`)
+- Selection translate tooltip (`Translate with Naranhi`) on major sites (Wikipedia / Medium-style blog / news) and error banner fallback on forced proxy failure
 - Visible-only mode: initial viewport translated first, scroll loads additional blocks
 - `visibleOnly=false` fallback: full-scan translation works like v0.1
 - `extractionMode=readability` vs `legacy` both produce translatable blocks

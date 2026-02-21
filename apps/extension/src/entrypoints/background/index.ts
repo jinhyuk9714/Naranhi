@@ -18,6 +18,7 @@ import type {
 import { EngineManager } from '@naranhi/engines';
 import type { EngineConfig } from '@naranhi/engines';
 import { InflightTranslations } from './inflight';
+import { handleSelectionTranslateRequest } from './selection-translate';
 
 export default defineBackground(() => {
   // --- Constants ---
@@ -322,30 +323,16 @@ export default defineBackground(() => {
     info: chrome.contextMenus.OnClickData,
     tab: chrome.tabs.Tab | undefined,
   ): Promise<void> {
-    const selectionText = normalizeText(info.selectionText || '');
-    if (!selectionText || !tab?.id) return;
-
-    const settings = await loadSettings();
-    try {
-      const result = await translateItems(
-        [{ id: 'selection', text: selectionText }],
-        settings,
-      );
-      const translatedText = result?.translations?.[0]?.text || '';
-      if (!translatedText) throw makeError('UNKNOWN', 'No translation returned', true);
-
-      await safeSendMessage(tab.id, {
-        type: MESSAGE_TYPES.SHOW_TOOLTIP,
-        translatedText,
-      });
-    } catch (err) {
-      const normalized = normalizeError(err);
-      await safeSendMessage(tab.id, {
-        type: MESSAGE_TYPES.SHOW_BANNER,
-        message: normalized.message,
-        retryable: normalized.retryable,
-      });
-    }
+    await handleSelectionTranslateRequest({
+      selectionText: String(info.selectionText || ''),
+      tabId: tab?.id,
+      translateOne: async (text) => {
+        const settings = await loadSettings();
+        const result = await translateItems([{ id: 'selection', text }], settings);
+        return result?.translations?.[0]?.text || '';
+      },
+      sendMessage: safeSendMessage,
+    });
   }
 
   async function safeSendMessage(tabId: number, message: unknown): Promise<void> {

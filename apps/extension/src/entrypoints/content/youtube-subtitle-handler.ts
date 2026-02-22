@@ -17,7 +17,6 @@ import {
   DomFallbackCommitter,
   selectActiveCue,
   resolveRenderText,
-  eventsToSimpleCues,
   normalizeText,
 } from '@naranhi/youtube';
 import type { HookBridgePayload, AsrCue, RenderState } from '@naranhi/youtube';
@@ -31,6 +30,7 @@ const FLUSH_INTERVAL_MS = 150;
 const RENDER_INTERVAL_MS = 120;
 const FALLBACK_BATCH_SIZE = 20;
 const HOOK_TIMEOUT_MS = 2500;
+const BUILD_DEBOUNCE_MS = 300;
 const DEDUPE_TTL_MS = 60_000;
 const CUE_PRUNE_BEHIND_MS = 45_000;
 const MAX_CUES_PER_TRACK = 300;
@@ -62,6 +62,11 @@ interface HandlerState {
   // Track / translation
   trackStates: Map<string, TrackState>;
   translatedByCueId: Map<string, string>;
+
+  // Event accumulation buffer (per track)
+  eventBuffer: Map<string, unknown[]>;
+  trackMeta: Map<string, { isAsr: boolean; trackLang: string }>;
+  buildTimer: ReturnType<typeof setTimeout> | null;
 
   // Render
   overlayEl: HTMLElement | null;
@@ -256,6 +261,9 @@ export function createYouTubeSubtitleHandler(): YouTubeSubtitleHandler {
       seenResponses: new Map(),
       trackStates: new Map(),
       translatedByCueId: new Map(),
+      eventBuffer: new Map(),
+      trackMeta: new Map(),
+      buildTimer: null,
       overlayEl: null,
       originalEl: null,
       translatedEl: null,
@@ -303,32 +311,63 @@ export function createYouTubeSubtitleHandler(): YouTubeSubtitleHandler {
     const sig = String(payload.trackSignature || '').slice(0, 32);
     const trackKey = `${trackLang}::${kind}::${sig}`;
 
-    // Build cues
+    // Accumulate events in buffer (merge with existing)
+    const existing = state.eventBuffer.get(trackKey) || [];
+    state.eventBuffer.set(trackKey, mergeEvents(existing, payload.events as unknown[]));
+    state.trackMeta.set(trackKey, { isAsr: payload.isAsr, trackLang });
+
+    // Debounce: wait for additional responses before building cues
+    if (state.buildTimer) clearTimeout(state.buildTimer);
+    state.buildTimer = setTimeout(() => {
+      state.buildTimer = null;
+      rebuildCuesFromBuffer(trackKey);
+    }, BUILD_DEBOUNCE_MS);
+  }
+
+  function mergeEvents(existing: unknown[], incoming: unknown[]): unknown[] {
+    const byStart = new Map<number, unknown>();
+    for (const e of [...existing, ...incoming]) {
+      if (!e || typeof e !== 'object') continue;
+      const start = Number((e as Record<string, unknown>).tStartMs || 0);
+      byStart.set(start, e);
+    }
+    return [...byStart.values()].sort(
+      (a, b) => Number((a as Record<string, unknown>).tStartMs || 0) - Number((b as Record<string, unknown>).tStartMs || 0),
+    );
+  }
+
+  function rebuildCuesFromBuffer(trackKey: string): void {
+    if (!state.active) return;
+    const events = state.eventBuffer.get(trackKey);
+    if (!events?.length) return;
+
+    const meta = state.trackMeta.get(trackKey);
+    if (!meta) return;
+
     let cues: AsrCue[];
-    if (payload.isAsr) {
+    if (meta.isAsr) {
       cues = stabilizer.buildCues({
-        events: payload.events as unknown[],
-        trackLang,
+        events,
+        trackLang: meta.trackLang,
         trackKey,
         source: 'hook',
       } as Parameters<typeof stabilizer.buildCues>[0]);
     } else {
       cues = manualMerger.buildCues({
-        events: payload.events as unknown[],
+        events,
         trackKey,
         source: 'hook',
       } as Parameters<typeof manualMerger.buildCues>[0]);
     }
 
-    if (!cues.length) {
-      cues = eventsToSimpleCues(
-        payload.events as unknown[],
-        trackKey,
-        'hook',
-      ) as AsrCue[];
-    }
+    // No fallback to word-level cues — wait for more data if stabilizer can't build sentences
+    if (!cues.length) return;
 
-    // Pre-translate all cues upfront, then add to track
+    // Replace track with fresh sentence-level cues
+    const track: TrackState = { cues: [], cueIds: new Set(), lastHookAt: Date.now() };
+    state.trackStates.set(trackKey, track);
+    state.primaryTrackKey = trackKey;
+
     addCuesToTrack(trackKey, cues);
     void batchTranslateAllCues(cues);
   }
@@ -524,8 +563,18 @@ export function createYouTubeSubtitleHandler(): YouTubeSubtitleHandler {
       }
     }
 
-    const originalText = cue?.text || '';
-    const translatedText = cue ? (state.translatedByCueId.get(cue.cueId) || '') : '';
+    // Hook mode: only show cue when translation is ready (bilingual pair)
+    // Fallback mode: show original even without translation (on-demand translation is slower)
+    let originalText = '';
+    let translatedText = '';
+
+    if (cue) {
+      const translation = state.translatedByCueId.get(cue.cueId);
+      if (translation || state.fallbackMode) {
+        originalText = cue.text;
+        translatedText = translation || '';
+      }
+    }
 
     // Anti-flicker hold for both lines
     const { text: renderOriginal, state: nextOrigState } = resolveRenderText(
@@ -613,6 +662,7 @@ export function createYouTubeSubtitleHandler(): YouTubeSubtitleHandler {
     }
 
     // Clear timers
+    if (state.buildTimer) clearTimeout(state.buildTimer);
     if (state.flushTimer) clearTimeout(state.flushTimer);
     if (state.renderTimer) clearInterval(state.renderTimer);
 

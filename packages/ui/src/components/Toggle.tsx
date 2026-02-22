@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface ToggleProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
@@ -15,23 +13,27 @@ export function Toggle({ checked, onChange, label, disabled = false, size = 'md'
   };
   const s = sizes[size];
 
+  const handleClick = () => {
+    if (!disabled) onChange(!checked);
+  };
+
   return (
-    <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={handleClick}
+      className={`inline-flex items-center gap-2 select-none ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+    >
       <div className="relative">
-        <input
-          type="checkbox"
-          className="sr-only"
-          checked={checked}
-          disabled={disabled}
-          onChange={(e) => onChange(e.target.checked)}
-        />
         <div
           className={`${s.track} rounded-full transition-colors duration-200 ${
             checked ? 'bg-naranhi-500' : 'bg-gray-300'
-          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          } ${disabled ? 'opacity-50' : ''}`}
         />
         <div
-          className={`absolute left-0.5 top-0.5 ${s.thumb} rounded-full bg-white shadow transition-transform duration-200 ${
+          className={`absolute left-0.5 top-0.5 ${s.thumb} rounded-full bg-white shadow transition-transform duration-200 pointer-events-none ${
             checked ? s.translate : 'translate-x-0'
           }`}
         />
@@ -39,6 +41,6 @@ export function Toggle({ checked, onChange, label, disabled = false, size = 'md'
       {label && (
         <span className={`text-sm ${disabled ? 'text-gray-400' : 'text-gray-700'}`}>{label}</span>
       )}
-    </label>
+    </button>
   );
 }

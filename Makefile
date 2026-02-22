@@ -1,6 +1,12 @@
 SHELL := /bin/bash
 
-.PHONY: proxy
+.PHONY: proxy proxy-health extension-build
 
 proxy:
-	cd apps/proxy && node server.mjs
+	cd apps/proxy && pnpm dev
+
+proxy-health:
+	curl -i http://localhost:8787/health
+
+extension-build:
+	pnpm --filter @naranhi/extension build

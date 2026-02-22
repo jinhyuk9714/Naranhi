@@ -20,7 +20,7 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "vitest run",
-    "lint": "eslint src/"
+    "lint": "tsc --noEmit"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

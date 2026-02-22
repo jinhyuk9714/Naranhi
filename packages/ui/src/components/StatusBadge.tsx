@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface StatusBadgeProps {
   status: 'connected' | 'disconnected' | 'loading';
   label?: string;

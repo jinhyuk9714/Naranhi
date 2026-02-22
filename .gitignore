@@ -25,12 +25,19 @@ apps/proxy/.env
 # Test coverage
 coverage/
 
-# Codex (previous tooling)
+# Claude Code
+.claude/
+
+# Codex / OpenClaw
 .agent/
 .agents/
 .codex/
+.openclaw/
 codex/
 AGENTS.md
-
-# Claude Code
-.claude/plans/
+BOOTSTRAP.md
+HEARTBEAT.md
+IDENTITY.md
+SOUL.md
+TOOLS.md
+USER.md

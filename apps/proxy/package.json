@@ -9,7 +9,7 @@
     "start": "node dist/server.js",
     "clean": "rm -rf dist",
     "test": "vitest run",
-    "lint": "eslint src/"
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@naranhi/core": "workspace:*"

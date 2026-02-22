@@ -11,7 +11,7 @@ import {
 type PartialSettings = Partial<NaranhiSettings>;
 
 export function useSettings() {
-  const [settings, setSettings] = useState<NaranhiSettings>(DEFAULT_SETTINGS as unknown as NaranhiSettings);
+  const [settings, setSettings] = useState<NaranhiSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

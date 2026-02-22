@@ -37,6 +37,11 @@ export interface ShowBannerMessage {
   retryable: boolean;
 }
 
+export interface PageStateChangedMessage {
+  type: 'NARANHI_PAGE_STATE_CHANGED';
+  enabled: boolean;
+}
+
 export interface ClearCacheMessage {
   type: 'NARANHI_CLEAR_CACHE';
 }
@@ -54,6 +59,7 @@ export type NaranhiMessage =
   | TranslateBatchMessage
   | TogglePageMessage
   | GetPageStateMessage
+  | PageStateChangedMessage
   | ToggleYtSubtitleMessage
   | GetYtSubtitleStateMessage
   | ShowTooltipMessage

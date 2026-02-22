@@ -12,7 +12,6 @@ import {
 import type {
   TranslationItem,
   TranslationOptions,
-  TranslationError,
   NaranhiSettings,
 } from '@naranhi/core';
 import { EngineManager } from '@naranhi/engines';
@@ -20,6 +19,7 @@ import type { EngineConfig } from '@naranhi/engines';
 import { InflightTranslations } from './inflight';
 import { handleSelectionTranslateRequest } from './selection-translate';
 import { inflateSettings } from '../../lib/settings-storage';
+import { makeTranslationError, normalizeTranslationError } from '../../lib/error-helpers';
 
 export default defineBackground(() => {
   // --- Constants ---
@@ -104,7 +104,7 @@ export default defineBackground(() => {
         const settings = await loadSettings();
         const runId = String(msg.runId || '');
         const items: TranslationItem[] = Array.isArray(msg.items) ? msg.items : [];
-        if (!runId) throw makeError('BAD_REQUEST', 'Missing runId', false);
+        if (!runId) throw makeTranslationError('BAD_REQUEST', 'Missing runId', false);
 
         const result = await translateItems(items, settings, msg.options, msg.channel);
         sendResponse({ ok: true, data: { runId, ...result } });
@@ -117,9 +117,9 @@ export default defineBackground(() => {
         return;
       }
 
-      sendResponse({ ok: false, error: makeError('BAD_REQUEST', 'Unknown message type', false) });
+      sendResponse({ ok: false, error: makeTranslationError('BAD_REQUEST', 'Unknown message type', false) });
     })().catch((err) => {
-      sendResponse({ ok: false, error: normalizeError(err) });
+      sendResponse({ ok: false, error: normalizeTranslationError(err) });
     });
 
     return true; // keep channel open for async
@@ -233,7 +233,7 @@ export default defineBackground(() => {
           for (const requestItem of batch) {
             const translated = byId.get(requestItem.id);
             if (translated === undefined) {
-              throw makeError('UNKNOWN', 'Translation response missing item', true);
+              throw makeTranslationError('UNKNOWN', 'Translation response missing item', true);
             }
             translationByKey.set(requestItem.id, translated);
             fetchedEntries.set(requestItem.id, translated);
@@ -273,7 +273,7 @@ export default defineBackground(() => {
     for (const segment of keyedSegments) {
       const translated = translationByKey.get(segment.cacheKey);
       if (translated === undefined) {
-        throw makeError('UNKNOWN', 'Failed to resolve translated segment', true);
+        throw makeTranslationError('UNKNOWN', 'Failed to resolve translated segment', true);
       }
       segmentTranslations.set(segment.id, translated);
     }
@@ -396,20 +396,4 @@ export default defineBackground(() => {
     await chrome.storage.local.remove([LOCAL_CACHE_KEY, LOCAL_CACHE_META_KEY]);
   }
 
-  // --- Error Helpers ---
-  function makeError(
-    code: string,
-    message: string,
-    retryable: boolean,
-    statusCode?: number,
-  ): TranslationError {
-    return { code, message, retryable, ...(statusCode ? { statusCode } : {}) };
-  }
-
-  function normalizeError(err: unknown): TranslationError {
-    if (err && typeof err === 'object' && 'code' in err && 'message' in err) {
-      return err as TranslationError;
-    }
-    return makeError('UNKNOWN', (err as Error)?.message || 'Unknown error', false);
-  }
 });

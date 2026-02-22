@@ -29,6 +29,7 @@ export type {
   TranslateBatchResponseData,
   TogglePageMessage,
   GetPageStateMessage,
+  PageStateChangedMessage,
   ToggleYtSubtitleMessage,
   GetYtSubtitleStateMessage,
   ShowTooltipMessage,

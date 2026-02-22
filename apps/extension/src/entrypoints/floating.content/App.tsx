@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { MESSAGE_TYPES } from '@naranhi/core';
+import type { NaranhiResponse, PageStateData } from '@naranhi/core';
 
 export default function FloatingButton() {
   const [expanded, setExpanded] = useState(false);
@@ -20,7 +21,7 @@ export default function FloatingButton() {
   // Check page state on mount + keep synced with other surfaces
   useEffect(() => {
     chrome.runtime.sendMessage({ type: MESSAGE_TYPES.GET_PAGE_STATE })
-      .then((resp: { ok: boolean; data: { enabled: boolean } }) => {
+      .then((resp: NaranhiResponse<PageStateData>) => {
         if (resp?.ok) setPageEnabled(resp.data.enabled);
       })
       .catch(() => {});
@@ -37,9 +38,9 @@ export default function FloatingButton() {
 
   const toggleTranslation = useCallback(async () => {
     try {
-      const resp = await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.TOGGLE_PAGE });
-      if ((resp as { ok: boolean; data: { enabled: boolean } })?.ok) {
-        setPageEnabled((resp as { ok: boolean; data: { enabled: boolean } }).data.enabled);
+      const resp = (await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.TOGGLE_PAGE })) as NaranhiResponse<PageStateData>;
+      if (resp?.ok) {
+        setPageEnabled(resp.data.enabled);
       }
     } catch {}
     setExpanded(false);

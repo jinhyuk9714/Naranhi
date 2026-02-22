@@ -1,5 +1,5 @@
 import { MESSAGE_TYPES, normalizeText } from '@naranhi/core';
-import type { TranslationError } from '@naranhi/core';
+import { makeTranslationError, normalizeTranslationError } from '../../lib/error-helpers';
 
 interface SelectionTranslateInput {
   selectionText: string;
@@ -14,29 +14,18 @@ export async function handleSelectionTranslateRequest(input: SelectionTranslateI
 
   try {
     const translatedText = await input.translateOne(selectionText);
-    if (!translatedText) throw makeError('UNKNOWN', 'No translation returned', true);
+    if (!translatedText) throw makeTranslationError('UNKNOWN', 'No translation returned', true);
 
     await input.sendMessage(input.tabId, {
       type: MESSAGE_TYPES.SHOW_TOOLTIP,
       translatedText,
     });
   } catch (err) {
-    const normalized = normalizeError(err);
+    const normalized = normalizeTranslationError(err);
     await input.sendMessage(input.tabId, {
       type: MESSAGE_TYPES.SHOW_BANNER,
       message: normalized.message,
       retryable: normalized.retryable,
     });
   }
-}
-
-function makeError(code: string, message: string, retryable: boolean, statusCode?: number): TranslationError {
-  return { code, message, retryable, ...(statusCode ? { statusCode } : {}) };
-}
-
-function normalizeError(err: unknown): TranslationError {
-  if (err && typeof err === 'object' && 'code' in err && 'message' in err) {
-    return err as TranslationError;
-  }
-  return makeError('UNKNOWN', (err as Error)?.message || 'Unknown error', false);
 }

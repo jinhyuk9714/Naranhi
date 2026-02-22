@@ -1,3 +1,5 @@
+import type { NaranhiSettings } from './types/settings';
+
 // --- Translation Limits ---
 export const LIMITS = {
   MAX_BODY_BYTES: 65536,
@@ -27,8 +29,8 @@ export const YT_HOOK_EVENT = 'NARANHI_YT_TIMEDTEXT_V1' as const;
 export const SENTENCE_BOUNDARY = /(?<=[.!?。！？])\s+/u;
 
 // --- Default Settings ---
-export const DEFAULT_SETTINGS = {
-  engine: 'deepl' as const,
+export const DEFAULT_SETTINGS: NaranhiSettings = {
+  engine: 'deepl',
   targetLang: 'KO',
   sourceLang: '',
   deepl: {
@@ -43,16 +45,16 @@ export const DEFAULT_SETTINGS = {
   google: {
     apiKey: '',
   },
-  displayMode: 'bilingual' as const,
-  translationPosition: 'below' as const,
+  displayMode: 'bilingual',
+  translationPosition: 'below',
   floatingButton: true,
-  theme: 'auto' as const,
+  theme: 'auto',
   visibleOnly: true,
   visibleRootMargin: '350px 0px 600px 0px',
   batchFlushMs: 120,
   cacheEnabled: false,
-  shortcuts: {} as Record<string, string>,
-} as const;
+  shortcuts: {},
+};
 
 // --- Supported Languages ---
 export const SUPPORTED_LANGUAGES = [

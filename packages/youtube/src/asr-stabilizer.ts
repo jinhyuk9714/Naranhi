@@ -242,14 +242,15 @@ interface Token {
   isBreak?: boolean;
 }
 
-interface TimedTextEvent {
+/** Raw YouTube timedtext event — all fields optional since ASR data is unvalidated. */
+interface RawTimedTextEvent {
   tStartMs?: number;
   dDurationMs?: number;
   aAppend?: number;
   segs?: Array<{ utf8?: string; tOffsetMs?: number }>;
 }
 
-function eventsToTokens(events: TimedTextEvent[], isSpaceLang: boolean): Token[] {
+function eventsToTokens(events: RawTimedTextEvent[], isSpaceLang: boolean): Token[] {
   const out: Token[] = [];
   let asciiCount = 0;
   let pendingSpace = '';
@@ -614,8 +615,8 @@ function groupsToCues(groups: Token[][], trackKey: string, source: string): AsrC
   return cues;
 }
 
-function sanitizeEvents(events: TimedTextEvent[]): TimedTextEvent[] {
-  const out: TimedTextEvent[] = [];
+function sanitizeEvents(events: RawTimedTextEvent[]): RawTimedTextEvent[] {
+  const out: RawTimedTextEvent[] = [];
   for (const event of events || []) {
     if (!event || typeof event !== 'object') continue;
     if (!Array.isArray(event.segs) || !event.segs.length) continue;
@@ -627,7 +628,7 @@ function sanitizeEvents(events: TimedTextEvent[]): TimedTextEvent[] {
   return out;
 }
 
-export function eventsToSimpleCues(events: TimedTextEvent[], trackKey: string, source: string): AsrCue[] {
+export function eventsToSimpleCues(events: RawTimedTextEvent[], trackKey: string, source: string): AsrCue[] {
   const cleaned = sanitizeEvents(events);
   const cues: AsrCue[] = [];
 
@@ -669,7 +670,7 @@ export interface StabilizerOptions {
 }
 
 export interface BuildCuesPayload {
-  events: TimedTextEvent[];
+  events: RawTimedTextEvent[];
   trackLang: string;
   trackKey?: string;
   source?: string;

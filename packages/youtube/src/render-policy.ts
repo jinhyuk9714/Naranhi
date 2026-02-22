@@ -3,12 +3,10 @@
  * Ported from _legacy/extension/youtubeRenderPolicy.js
  */
 
+import { normalizeText } from './subtitle';
+
 export const DEFAULT_HOLD_MS = 900;
 const WINDOW_MATCH_MS = 6000;
-
-function normalizeText(text: string | null | undefined): string {
-  return String(text || '').replace(/\s+/g, ' ').trim();
-}
 
 function tokenize(text: string): string[] {
   return normalizeText(text)

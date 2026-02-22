@@ -8,6 +8,7 @@ declare module "wxt/browser" {
     | "/background.js"
     | "/content-scripts/content.js"
     | "/content-scripts/floating.js"
+    | "/content-scripts/youtube-hook.js"
     | "/options.html"
     | "/popup.html"
     | "/sidepanel.html"

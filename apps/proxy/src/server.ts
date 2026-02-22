@@ -21,6 +21,7 @@ import {
   parseRetryAfterMs,
   computeBackoffDelayMs,
 } from './translate.js';
+import { BoundedCache } from './bounded-cache.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,6 +60,7 @@ const API_BASE = getEnv('DEEPL_API_BASE', 'https://api-free.deepl.com')!;
 const PORT = parseInt(getEnv('PORT', '8787')!, 10);
 const ALLOWED_ORIGINS = getEnv('ALLOWED_ORIGINS', 'local')!;
 const CACHE_TTL_MS = parseInt(getEnv('CACHE_TTL_MS', '86400000')!, 10);
+const CACHE_MAX_ENTRIES = parseInt(getEnv('CACHE_MAX_ENTRIES', '2000')!, 10);
 const DEEPL_RETRY_ATTEMPTS = parseInt(getEnv('DEEPL_RETRY_ATTEMPTS', '2')!, 10);
 
 if (!AUTH_KEY) {
@@ -67,7 +69,7 @@ if (!AUTH_KEY) {
 }
 
 // --- Cache ---
-const cache = new Map<string, { ts: number; value: unknown }>();
+const cache = new BoundedCache<unknown>(CACHE_MAX_ENTRIES, CACHE_TTL_MS);
 
 // --- Helpers ---
 function json(
@@ -200,17 +202,16 @@ const server = http.createServer(async (req, res) => {
       const normalizedPayload = normalizeTranslatePayload(payload);
       const key = buildRequestCacheKey(normalizedPayload, API_BASE);
 
-      const now = Date.now();
       const cached = cache.get(key);
       let deeplData: Record<string, unknown>;
       let cacheState = 'MISS';
 
-      if (cached && now - cached.ts < CACHE_TTL_MS) {
-        deeplData = cached.value as Record<string, unknown>;
+      if (cached) {
+        deeplData = cached as Record<string, unknown>;
         cacheState = 'HIT';
       } else {
         deeplData = (await deeplTranslate(normalizedPayload)) as Record<string, unknown>;
-        cache.set(key, { ts: now, value: deeplData });
+        cache.set(key, deeplData);
       }
 
       const translations = normalizedPayload.items.map((item, index) => ({
